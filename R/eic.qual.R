@@ -1,3 +1,29 @@
+#' Internal function: Calculate the single predictor quality.
+#' 
+#' For each column of an EIC data feature matrix, find its predictive power on
+#' the m/z match to known metabolites.
+#' 
+#' 
+#' @param eic.rec The EIC data feature matrix. Each row is an EIC. Each column
+#' is a data feature.
+#' @param known.mz The known m/z values to be matched to.
+#' @param mass.matched A vector of indicators of whether the m/z of each EIC is
+#' matched to the known m/z values. The default is NA, in which case it is
+#' calculated within the function.
+#' @param match.tol.ppm The tolerance level of m/z match.
+#' @param do.plot Whether to produce plots of the ROCS.
+#' @param pos.confidence The confidence level for the features matched to the
+#' known feature list.
+#' @param neg.confidence The confidence level for the features not matching to
+#' the known feature list.
+#' @return A matrix of four columns. The first two columns are the VUS and AUC
+#' without uncertainty. The next two columns are the VUS and AUC with
+#' uncertainty.
+#' @author Tianwei Yu <tyu8@@emory.edu>
+#' @references Bioinformatics. 30(20): 2941-2948.
+#' @keywords models
+#' @examples
+#' 
 eic.qual <-
 function(eic.rec, known.mz, mass.matched=NA, match.tol.ppm=5, do.plot=FALSE, pos.confidence=0.99, neg.confidence=0.99)
 {

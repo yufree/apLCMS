@@ -1,3 +1,16 @@
+#' An internal function.
+#' 
+#' This is a internal function. It shouldn't be called by the end user.
+#' 
+#' 
+#' @param a vector of retention time.
+#' @param mz vector of m/z ratio.
+#' @param inte vector of signal strength.
+#' @author Tianwei Yu <tyu8@@emory.edu>
+#' @references Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
+#' @keywords models
+#' @examples
+#' 
 merge.seq.3 <-
 function(a, mz, inte)             ### the input need to be pre-ordered by a
 {

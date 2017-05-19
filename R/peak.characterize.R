@@ -1,3 +1,24 @@
+#' Internal function: Updates the information of a feature for the known
+#' feature table.
+#' 
+#' The function takes the information about the feature in the known feature
+#' table (if available), and updates it using the information found in the
+#' current dataset.
+#' 
+#' The function calculates and updates the mean intensity, variation of
+#' intensity, mean retention time etc.
+#' 
+#' @param existing.row The existing row in the known feature table (detailed in
+#' the semi.sup() document).
+#' @param ftrs.row The row of the matched feature in the new aligned feature
+#' table.
+#' @param chr.row The row of the matched feature in the new retention time
+#' table of aligned features.
+#' @return A vector, the updated row for the known feature table.
+#' @author Tianwei Yu <tyu8@@emory.edu>
+#' @keywords models
+#' @examples
+#' 
 peak.characterize <-
 function(existing.row=NA, ftrs.row, chr.row)
 {
