@@ -1,5 +1,5 @@
 proc.cdf <-
-function(filename, min.pres=0.5, min.run=12, tol=1e-5, baseline.correct=0, baseline.correct.noise.percentile=0, do.plot=TRUE)
+function(filename, min.pres=0.5, min.run=12, tol=1e-5, baseline.correct=0, baseline.correct.noise.percentile=0, do.plot=TRUE, intensity.weighted=FALSE)
 {
     if(do.plot) par(mfrow=c(2,2))
     this.name<-paste(strsplit(tolower(filename),"\\.")[[1]][1],"_",min.run,"_", min.pres, "_", tol,".rawprof",sep="")
@@ -13,7 +13,7 @@ function(filename, min.pres=0.5, min.run=12, tol=1e-5, baseline.correct=0, basel
         if(do.plot) text(x=0,y=0,tol,cex=1.2)
     }else{
         this<-load.lcms(filename)
-        raw.prof<-adaptive.bin(this, min.run=min.run, min.pres=min.pres, tol=tol, baseline.correct=baseline.correct)
+        raw.prof<-adaptive.bin(this, min.run=min.run, min.pres=min.pres, tol=tol, baseline.correct=baseline.correct, weighted=intensity.weighted)
         save(raw.prof, file=this.name)
     }
     

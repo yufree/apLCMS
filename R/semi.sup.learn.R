@@ -1,18 +1,11 @@
 semi.sup.learn <-
-function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.pres=0.3, min.run=4, mz.tol=1e-5, shape.model="bi-Gaussian",  baseline.correct=0, peak.estim.method="moment", min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim=c(0.33, 3), subs=NULL, align.mz.tol=NA, align.chr.tol=NA, max.align.mz.diff=0.01, pre.process=FALSE, recover.mz.range=NA, recover.chr.range=NA, use.observed.range=TRUE, match.tol.ppm=5, new.feature.min.count=2, recover.min.count=3, use.learn=TRUE, ridge.smoother.window=50, smoother.window=c(1, 5, 10),pos.confidence=0.99, neg.confidence=0.99, max.ftrs.to.use=10, do.grp.reduce=TRUE, remove.bottom.ftrs=0, max.fpr=0.5, min.tpr=0.9)
+function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.pres=0.3, min.run=4, mz.tol=1e-5, shape.model="bi-Gaussian",  baseline.correct=0, peak.estim.method="moment", min.bw=NA, max.bw=NA, sd.cut=c(0.01,500), component.eliminate=0.01, moment.power=1, sigma.ratio.lim=c(0.01, 100), subs=NULL, align.mz.tol=NA, align.chr.tol=NA, max.align.mz.diff=0.01, pre.process=FALSE, recover.mz.range=NA, recover.chr.range=NA, use.observed.range=TRUE, match.tol.ppm=5, new.feature.min.count=2, recover.min.count=3, use.learn=TRUE, ridge.smoother.window=50, smoother.window=c(1, 5, 10),pos.confidence=0.99, neg.confidence=0.99, max.ftrs.to.use=10, do.grp.reduce=TRUE, remove.bottom.ftrs=0, max.fpr=0.5, min.tpr=0.9, intensity.weighted=FALSE)
 {
     
     
     library(mzR)
     library(doparallel)
     setwd(folder)
-    cl <- makePSOCKcluster(n.nodes, error=recover)
-    registerDoParallel(cl)
-    
-    #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
-    clusterEvalQ(cl, library(apLCMS))
-    #	clusterExport(cl, list(ls()))
-    #   clusterExport(cl, "known.table")
     
     files<-dir(pattern=file.pattern, ignore.case = TRUE)
     files<-files[order(files)]
@@ -27,8 +20,14 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     message("***************************** prifiles --> feature lists *****************************")
     suf.prof<-paste(min.pres,min.run,mz.tol,baseline.correct,sep="_")
     if(use.learn) suf.prof<-paste(min.run, min.pres, ridge.smoother.window, mz.tol, baseline.correct, max.ftrs.to.use, do.grp.reduce, remove.bottom.ftrs, max.fpr, min.tpr, sep="_")
-    suf<-paste(suf.prof, shape.model, min.run, min.pres, sd.cut[1], sd.cut[2],sep="_")
+    suf<-paste(suf.prof, shape.model, min.run, min.pres, sd.cut[1], sd.cut[2],component.eliminate, moment.power, sep="_")
     if(shape.model=="bi-Gaussian") suf<-paste(suf, sigma.ratio.lim[1], sigma.ratio.lim[2],sep="_")
+    
+    cl <- makeCluster(n.nodes)
+    registerDoParallel(cl)
+    #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+    clusterEvalQ(cl, library(apLCMS))
+
     features<-foreach(i=1:length(files)) %dopar%
     {
         this.name<-paste(strsplit(tolower(files[i]),"\\.")[[1]][1],suf, min.bw, max.bw,".feature",sep="_")
@@ -47,9 +46,9 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
             {
                 if(use.learn)
                 {
-                    message(c(i, "  ", that.name, "  ", as.vector(system.time(processable<-try(this.prof<-learn.cdf(files[i], known.mz=known.table[,6], tol=mz.tol, min.run=min.run, min.pres=min.pres, match.tol.ppm=match.tol.ppm, baseline.correct=baseline.correct, ridge.smoother.window=ridge.smoother.window, smoother.window=smoother.window,pos.confidence=pos.confidence, neg.confidence=neg.confidence, max.ftrs.to.use=max.ftrs.to.use, do.grp.reduce=do.grp.reduce, remove.bottom.ftrs=remove.bottom.ftrs, max.fpr=max.fpr, min.tpr=min.tpr))[1]))[1]))
+                    message(c(i, "  ", that.name, "  ", as.vector(system.time(processable<-try(this.prof<-learn.cdf(files[i], known.mz=known.table[,6], tol=mz.tol, min.run=min.run, min.pres=min.pres, match.tol.ppm=match.tol.ppm, baseline.correct=baseline.correct, ridge.smoother.window=ridge.smoother.window, smoother.window=smoother.window,pos.confidence=pos.confidence, neg.confidence=neg.confidence, max.ftrs.to.use=max.ftrs.to.use, do.grp.reduce=do.grp.reduce, remove.bottom.ftrs=remove.bottom.ftrs, max.fpr=max.fpr, min.tpr=min.tpr, intensity.weighted=intensity.weighted))[1]))[1]))
                 }else{
-                    message(c(i, "  ", that.name, "  ", as.vector(system.time(processable<-try(this.prof<-proc.cdf(files[i], min.pres=min.pres, min.run=min.run, tol=mz.tol, baseline.correct=baseline.correct, do.plot=FALSE))[1]))[1]))
+                    message(c(i, "  ", that.name, "  ", as.vector(system.time(processable<-try(this.prof<-proc.cdf(files[i], min.pres=min.pres, min.run=min.run, tol=mz.tol, baseline.correct=baseline.correct, do.plot=FALSE, intensity.weighted=intensity.weighted))[1]))[1]))
                 }
                 if(substr(processable[1],1,5)=="Error")
                 {
@@ -66,7 +65,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
             if(substr(processable[1],1,5)!="Error")
             {
                 processable.2<-"goodgood"
-                message(c(i, "  ", this.name,"  ",as.vector(system.time(processable.2<-try(this.feature<-prof.to.features(this.prof[[1]], min.bw=min.bw, max.bw=max.bw, sd.cut=sd.cut, shape.model=shape.model, estim.method=peak.estim.method, do.plot=FALSE))))[1]))
+                message(c(i, "  ", this.name,"  ",as.vector(system.time(processable.2<-try(this.feature<-prof.to.features(this.prof[[1]], min.bw=min.bw, max.bw=max.bw, sd.cut=sd.cut, shape.model=shape.model, estim.method=peak.estim.method, do.plot=FALSE, component.eliminate=component.eliminate, power=moment.power))))[1]))
                 
                 if(substr(processable.2,1,5)=="Error")
                 {
@@ -83,7 +82,8 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         }
         this.feature
     }
-    
+    stopCluster(cl)
+
     all.files<-dir()
     sel<-which(files %in% all.files)
     files<-files[sel]
@@ -100,9 +100,15 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     
     if(length(is.done)==0)
     {
+        cl <- makeCluster(n.nodes)
+        registerDoParallel(cl)
+        #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+        clusterEvalQ(cl, library(apLCMS))
+
         if(is.na(align.mz.tol)) align.mz.tol=2 * match.tol.ppm *1e-6
         message(c("***** correcting time, CPU time (seconds) ",as.vector(system.time(f2<-adjust.time(features,mz.tol=align.mz.tol, chr.tol=align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)))[1]))
         save(f2,file=this.name)
+        stopCluster(cl)
     }else{
         load(this.name)
     }
@@ -116,9 +122,15 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     is.done<-all.files[which(all.files == this.name)]
     if(length(is.done)==0)
     {
+        cl <- makeCluster(n.nodes)
+        registerDoParallel(cl)
+        #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+        clusterEvalQ(cl, library(apLCMS))
+
         if(is.na(align.mz.tol)) align.mz.tol=2 * match.tol.ppm *1e-6
         message(c("***** aligning features, CPU time (seconds): ", as.vector(system.time(aligned<-feature.align(f2, min.exp=min.exp,mz.tol=align.mz.tol,chr.tol=align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)))[1]))
         save(aligned,file=this.name)
+        stopCluster(cl)
     }else{
         load(this.name)
     }
@@ -211,6 +223,11 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     message("**************************** recovering weaker signals *******************************")
     suf<-paste(suf,recover.mz.range, recover.chr.range, use.observed.range,match.tol.ppm,new.feature.min.count,recover.min.count,sep="_")
     
+    cl <- makeCluster(n.nodes)
+    registerDoParallel(cl)
+    #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+    clusterEvalQ(cl, library(apLCMS))
+
     foreach(i=1:length(files)) %dopar%
     {
         this.name<-paste(strsplit(tolower(files[i]),"\\.")[[1]][1],suf,"semi_sup.recover",sep="_")
@@ -223,7 +240,8 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
             save(this.recovered, file=this.name)
         }
     }
-    
+    stopCluster(cl)
+
     new.aligned<-aligned
     new.aligned$orig.known.table<-known.table
     
@@ -299,7 +317,6 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     rec$updated.known.table<-known.2
     rec$ftrs.known.table.pairing<-new.known.pairing
     
-    stopCluster(cl)
     return(rec)
     
 }

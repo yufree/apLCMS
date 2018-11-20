@@ -56,9 +56,9 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         masses<-masses[curr.order]
         
         
-        if(is.na(min.bw)) min.bw<-diff(range(times, na.rm=TRUE))/30
+        if(is.na(min.bw)) min.bw<-diff(range(times, na.rm=TRUE))/60
         if(is.na(max.bw)) max.bw<-diff(range(times, na.rm=TRUE))/15
-        if(min.bw >= max.bw) min.bw<-max.bw/2
+        if(min.bw >= max.bw) min.bw<-max.bw/4
         
         base.curve<-times
         aver.diff<-mean(diff(base.curve))
@@ -288,10 +288,6 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     library(mzR)
     library(doParallel)
     setwd(folder)
-    cl <- makePSOCKcluster(n.nodes, error=recover)
-    registerDoParallel(cl)
-    #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
-    clusterEvalQ(cl, library(apLCMS))
     
     files<-dir(pattern=file.pattern, ignore.case = TRUE)
     files<-files[order(files)]
@@ -315,7 +311,12 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     message("**************************** recovering target signals *******************************")
     suf<-paste("recover", recover.mz.range, recover.chr.range, use.observed.range,match.tol.ppm,new.feature.min.count,recover.min.count,nrow(aligned.ftrs), sep="_")
     
-    #	.export=ls(envir=globalenv())
+
+    cl <- makeCluster(n.nodes)
+    registerDoParallel(cl)
+    #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+    clusterEvalQ(cl, library(apLCMS))
+
     foreach(i=1:length(files)) %dopar%
     {
         this.name<-paste(strsplit(tolower(files[i]),"\\.")[[1]][1],suf,"targeted.recover",sep="_")
@@ -329,7 +330,8 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
             gc()
         }
     }
-    
+    stopCluster(cl)
+
     ##############################################################################################
     message("loading feature tables after target search")
     features.recov<-new("list")
@@ -357,22 +359,35 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         
         if(length(is.done)==0)
         {
+            cl <- makeCluster(n.nodes)
+            registerDoParallel(cl)
+            #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+            clusterEvalQ(cl, library(apLCMS))
+
             message(c("***** correcting time, CPU time (seconds) ",as.vector(system.time(f2.recov<-adjust.time(features.recov, mz.tol=align.mz.tol, chr.tol=align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)))[1]))
             save(f2.recov,file=this.name)
+            stopCluster(cl)
+
         }else{
             load(this.name)
         }
         gc()
         ###############################################################################################
         message("**************************** aligning features *************************")
-        suf<-paste(suf,1,sep="_")
+        suf<-paste(suf,min.exp,sep="_")
         this.name<-paste("aligned_done_",suf,".bin",sep="")
         all.files<-dir()
         is.done<-all.files[which(all.files == this.name)]
         if(length(is.done)==0)
         {
+            cl <- makeCluster(n.nodes)
+            registerDoParallel(cl)
+            #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+            clusterEvalQ(cl, library(apLCMS))
+
             message(c("***** aligning features, CPU time (seconds): ", as.vector(system.time(aligned.recov<-feature.align(f2.recov, min.exp=min.exp,mz.tol=align.mz.tol,chr.tol=align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)))[1]))
             save(aligned.recov,file=this.name)
+            stopCluster(cl)
         }else{
             load(this.name)
         }
@@ -392,6 +407,5 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         rec$reduced.times<-aligned.recov$pk.times
     }
     
-    stopCluster(cl)
     return(rec)
 }

@@ -6,7 +6,7 @@
   This function applies the run filter to remove noise. Data points are grouped into EICs in this step.  
 }
 \usage{
-proc.cdf(filename, min.pres=0.5, min.run=12, tol=1e-5, baseline.correct=NA, baseline.correct.noise.percentile=0.25, do.plot=TRUE)
+proc.cdf(filename, min.pres=0.5, min.run=12, tol=1e-5, baseline.correct=0, baseline.correct.noise.percentile=0, do.plot=TRUE, intensity.weighted=FALSE)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -17,6 +17,7 @@ proc.cdf(filename, min.pres=0.5, min.run=12, tol=1e-5, baseline.correct=NA, base
   \item{baseline.correct}{After grouping the observations, the highest intensity in each group is found. If the highest is lower than this value, the entire group will be deleted. The default value is NA, in which case the program uses a percentile of the height of the noise groups. If given a value, the value will be used as the threshold, and baseline.correct.noise.percentile will be ignored. }
   \item{baseline.correct.noise.percentile}{ The perenctile of signal strength of those EIC that don't pass the run filter, to be used as the baseline threshold of signal strength. }
   \item{do.plot}{ Whether to generate diagnostic plots. }
+  \item{intensity.weighted}{Whether to weight the local density by signal intensities.}
 }
 \details{
   The subroutine takes CDF, mxml etc LC/MS profile.  

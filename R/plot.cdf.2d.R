@@ -1,23 +1,3 @@
-#' Plot the data in the m/z and retention time plane.
-#' 
-#' This is a diagnostic function. It takes the original CDF file, as well as
-#' the detected feature table, and plots the data in the m/z - retention time
-#' plane, using a user-defined range. The entire data is too big to plot, thus
-#' the main purpose is to focus on small subregions of the data and check the
-#' peak detection results.
-#' 
-#' 
-#' @param rawname The CDF file name.
-#' @param f The output object of prof.to.feature().
-#' @param mzlim The m/z range to plot.
-#' @param timelim The retention time range to plot.
-#' @param lwd Line width parameter, to be passed on to the function line().
-#' @return There is no return value.
-#' @author Tianwei Yu <tyu8@@emory.edu>
-#' @references Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
-#' @keywords models
-#' @examples
-#' 
 plot.cdf.2d <-
 function(rawname, f, mzlim,timelim, lwd=1)
 ### rawname is the cdf file name

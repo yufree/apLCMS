@@ -5,7 +5,7 @@
   This function applies the run filter to remove noise. Data points are grouped into EICs in this step.  
 }
 \usage{
-proc.txt(filename, min.pres=0.5, min.run=12,tol=NA, find.tol.maxd=1e-4, baseline.correct.noise.percentile=0.25, baseline.correct=NA)
+proc.txt(filename, min.pres=0.5, min.run=12,tol=NA, find.tol.maxd=1e-4, baseline.correct.noise.percentile=0, baseline.correct=NA)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -13,6 +13,7 @@ proc.txt(filename, min.pres=0.5, min.run=12,tol=NA, find.tol.maxd=1e-4, baseline
   \item{min.pres}{ Run filter parameter. The minimum proportion of presence in the time period for a series of signals grouped by m/z to be considered a peak.}
   \item{min.run}{ Run filter parameter. The minimum length of elution time for a series of signals grouped by m/z to be considered a peak. }
   \item{tol}{ m/z tolerance level for the grouping of data points. This value is expressed as the fraction of the m/z value. This value, multiplied by the m/z value, becomes the cutoff level. The recommended value is the machine's nominal accuracy level. Divide the ppm value by 1e6. For FTMS, 1e-5 is recommended. }
+  \item{find.tol.maxd}{maximum distance between datapoints that are allowed in the procedure to find tolerance.}
   \item{baseline.correct}{After grouping the observations, the highest intensity in each group is found. If the highest is lower than this value, the entire group will be deleted. The default value is NA, in which case the program uses the 75th percentile of the height of the noise groups. }
   \item{baseline.correct.noise.percentile}{ The perenctile of signal strength of those EIC that don't pass the run filter, to be used as the baseline threshold of signal strength. }
 }

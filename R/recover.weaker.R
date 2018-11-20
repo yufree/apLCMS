@@ -1,5 +1,4 @@
-recover.weaker <-
-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, align.chr.tol, this.f1, this.f2, mz.range=NA, chr.range=NA, use.observed.range=TRUE, orig.tol=1e-5,min.bw=NA,max.bw=NA,bandwidth=.5, recover.min.count=3)
+recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, align.chr.tol, this.f1, this.f2, mz.range=NA, chr.range=NA, use.observed.range=TRUE, orig.tol=1e-5,min.bw=NA,max.bw=NA,bandwidth=.5, recover.min.count=3, intensity.weighted=FALSE)
 {
     duplicate.row.remove<-function(new.table)
     {
@@ -37,11 +36,6 @@ function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, align.chr.tol, thi
     times<-this.raw$times
     rm(this.raw)
     
-    times<-times[order(times)]
-    base.curve<-unique(times)
-    base.curve<-base.curve[order(base.curve)]
-    base.curve<-cbind(base.curve, base.curve*0)
-    
     
     masses<-c(masses, -100000)
     mass.breaks<-which(masses[1:(length(masses)-1)] > masses[2:length(masses)])
@@ -54,13 +48,16 @@ function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, align.chr.tol, thi
     masses<-masses[curr.order]
     
     
-    if(is.na(min.bw)) min.bw<-diff(range(times, na.rm=TRUE))/30
+    if(is.na(min.bw)) min.bw<-diff(range(times, na.rm=TRUE))/60
     if(is.na(max.bw)) max.bw<-diff(range(times, na.rm=TRUE))/15
-    if(min.bw >= max.bw) min.bw<-max.bw/2
+    if(min.bw >= max.bw) min.bw<-max.bw/4
     
-    base.curve<-times
+    times<-times[order(times)]
+    base.curve<-unique(times)
+    base.curve<-base.curve[order(base.curve)]
     aver.diff<-mean(diff(base.curve))
     base.curve<-cbind(base.curve, base.curve*0)
+    
     all.times<-base.curve[,1]
     if(all.times[1]>0) all.times<-c(0,all.times)
     all.times<-c(all.times, 2*all.times[length(all.times)]-all.times[length(all.times)-1])
@@ -83,12 +80,13 @@ function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, align.chr.tol, thi
     }
     orig.time<-round(this.f1[,2],5)
     adjusted.time<-round(this.f2[,2],5)
+    ttt.0<-table(orig.time)
     ttt<-table(adjusted.time)
-    to.use<-which(adjusted.time %in% as.numeric(names(ttt)[ttt==1]))
-    if(length(to.use) > 2000) to.use<-sample(to.use, 2000)
+    to.use<-which(adjusted.time %in% as.numeric(names(ttt)[ttt==1]) & orig.time %in% as.numeric(names(ttt.0)[ttt.0==1]))
+    if(length(to.use) > 2000) to.use<-sample(to.use, 2000, replace=FALSE)
     orig.time<-orig.time[to.use]
     adjusted.time<-adjusted.time[to.use]
-    sp<-interpSpline(orig.time~adjusted.time)
+    sp<-interpSpline(orig.time~adjusted.time, na.action = na.omit)
     
     sel.non.na<-which(!is.na(aligned.ftrs[,2]))
     target.time<-aligned.ftrs[,2]
@@ -123,8 +121,13 @@ function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, align.chr.tol, thi
                 this.intensi<-intensi[this.sel]
                 
                 this.bw=0.5*orig.tol*aligned.ftrs[i,1]
-                mass.den<-density(this.masses, weights=this.intensi/sum(this.intensi), bw=this.bw)
-                mass.den$y[mass.den$y < min(this.intensi)/10]<-0
+                if(intensity.weighted)
+                {
+                    mass.den<-density(this.masses, weights=this.intensi/sum(this.intensi), bw=this.bw)
+                }else{
+                    mass.den<-density(this.masses, bw=this.bw)
+                }
+                #mass.den$y[mass.den$y < min(this.intensi)/10]<-0
                 mass.turns<-find.turn.point(mass.den$y)
                 mass.pks<-mass.den$x[mass.turns$pks]
                 mass.vlys<-c(-Inf, mass.den$x[mass.turns$vlys], Inf)

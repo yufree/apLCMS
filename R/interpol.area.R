@@ -1,22 +1,3 @@
-#' Interpolate missing intensities and calculate the area for a single EIC.
-#' 
-#' This is an internal function that's not supposed to be called directly by
-#' the user.
-#' 
-#' This is an internal function. It interpolates missing y using linear
-#' interpolation, and then calculates the area under the curve.
-#' 
-#' @param x the positions of x(retention time) where non-NA y is observed.
-#' @param y the observed intensities.
-#' @param all.x all possible x(retention time) in the LCMS profile.
-#' @param all.w the "footprint" of each measured retention time, used as weight
-#' for the corresponding y.
-#' @return The area is returned.
-#' @author Tianwei Yu <tyu8@@emory.edu>
-#' @references
-#' @keywords models
-#' @examples
-#' 
 interpol.area <-
 function(x, y, all.x, all.w) # x is retention time, all.w is weight of each all.x, y is observed intensities
 {

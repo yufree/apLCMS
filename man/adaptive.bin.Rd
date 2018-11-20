@@ -3,7 +3,7 @@
 \title{Adaptive binning}
 \description{This is an internal function. It creates EICs using adaptive binning procedure}
 \usage{
-adaptive.bin(x, min.run, min.pres, tol, baseline.correct)
+adaptive.bin(x, min.run, min.pres, tol, baseline.correct, weighted=FALSE)
 }
 \arguments{
   \item{x}{ A matrix with columns of m/z, retention time, intensity. }
@@ -23,6 +23,7 @@ A list is returned.
   \item{times}{ All the unique retention time values, ordered. }
   \item{tol}{ The m/z tolerance level. }
   \item{min.count.run}{ The minimum number of elution time points for a series of signals grouped by m/z to be considered a peak.}
+  \item{weighted}{Whether to weight the local density by signal intensities.}
 }
 \references{
 Bioinformatics. 25(15):1930-36. 

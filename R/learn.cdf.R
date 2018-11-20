@@ -1,62 +1,5 @@
-#' Peak detection using the machine learning approach.
-#' 
-#' The procedure uses information of known metabolites, and constructs
-#' prediction models to differentiate EICs.
-#' 
-#' The subroutine takes CDF, mxml etc LC/MS profile.  First the profile is
-#' sliced into EICs using adaptive binning. Then data features are extracted
-#' from each EIC. The EICs are classified into two groups: those that have m/z
-#' values that match to known m/z values, and those that don’t. Classification
-#' models are built to separate the two classes, and each EIC is given a score
-#' by the classification model. Those with better scores are selected to enter
-#' the feature quantification step.
-#' 
-#' @param filename The cdf file name. If the file is not in the working
-#' directory, the path needs to be given.
-#' @param min.pres Run filter parameter. The minimum proportion of presence in
-#' the time period for a series of signals grouped by m/z to be considered a
-#' peak.
-#' @param min.run Run filter parameter. The minimum length of elution time for
-#' a series of signals grouped by m/z to be considered a peak.
-#' @param tol m/z tolerance level for the grouping of data points. This value
-#' is expressed as the fraction of the m/z value. This value, multiplied by the
-#' m/z value, becomes the cutoff level. The recommended value is the machine's
-#' nominal accuracy level. Divide the ppm value by 1e6. For FTMS, 1e-5 is
-#' recommended.
-#' @param baseline.correct After grouping the observations, the highest
-#' intensity in each group is found. If the highest is lower than this value,
-#' the entire group will be deleted. The default value is NA, in which case the
-#' program uses the 75th percentile of the height of the noise groups.
-#' @param ridge.smoother.window The size of the smoother window used by the
-#' kernel smoother to remove long ridge noise from each EIC.
-#' @param smoother.window The smoother windows to use in data feature
-#' generation.
-#' @param known.mz The m/z values of the known metabolites.
-#' @param match.tol.ppm The ppm tolerance to match identified features to known
-#' metabolites/features.
-#' @param do.plot Whether to produce diagnostic plots.
-#' @param pos.confidence The confidence level for the features matched to the
-#' known feature list.
-#' @param neg.confidence The confidence level for the features not matching to
-#' the known feature list.
-#' @param max.ftrs.to.use The maximum number of data features to use in a
-#' predictive model.
-#' @param do.grp.reduce Whether to reduce data features that are similar. It is
-#' based on data feature predictability.
-#' @param remove.bottom.ftrs The number of worst performing data features to
-#' remove before model building.
-#' @param max.fpr The proportion of unmatched features to be selected in the
-#' feature detection step.
-#' @param min.tpr The proportion of matched features to be selected in the
-#' feature detection step.
-#' @return A matrix with four columns: m/z value, retention time, intensity,
-#' and group number.
-#' @author Tianwei Yu <tyu8@@emory.edu>
-#' @keywords models
-#' @examples
-#' 
 learn.cdf <-
-function(filename, tol=2e-5, min.run=4, min.pres=0.3, baseline.correct=0, ridge.smoother.window=50, smoother.window=c(1, 5, 10), known.mz, match.tol.ppm=5, do.plot=FALSE, pos.confidence=0.99, neg.confidence=0.99, max.ftrs.to.use=10, do.grp.reduce=TRUE, remove.bottom.ftrs=0, max.fpr=seq(0,0.6, by=0.1), min.tpr=seq(0.8, 1,by=0.1))
+function(filename, tol=2e-5, min.run=4, min.pres=0.3, baseline.correct=0, ridge.smoother.window=50, smoother.window=c(1, 5, 10), known.mz, match.tol.ppm=5, do.plot=FALSE, pos.confidence=0.99, neg.confidence=0.99, max.ftrs.to.use=10, do.grp.reduce=TRUE, remove.bottom.ftrs=0, max.fpr=seq(0,0.6, by=0.1), min.tpr=seq(0.8, 1,by=0.1), intensity.weighted=FALSE)
 {
     if(do.plot) par(mfrow=c(2,2))
     
@@ -74,7 +17,7 @@ function(filename, tol=2e-5, min.run=4, min.pres=0.3, baseline.correct=0, ridge.
         }
     }else{
         this<-load.lcms(filename)
-        raw.prof<-adaptive.bin.2(this, tol=tol, ridge.smoother.window=ridge.smoother.window, baseline.correct=baseline.correct)
+        raw.prof<-adaptive.bin.2(this, tol=tol, ridge.smoother.window=ridge.smoother.window, baseline.correct=baseline.correct, weighted=intensity.weighted)
         save(raw.prof, file=this.name)
     }
     

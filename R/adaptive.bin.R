@@ -1,41 +1,5 @@
-#' Adaptive binning
-#' 
-#' This is an internal function. It creates EICs using adaptive binning
-#' procedure
-#' 
-#' It uses repeated smoothing and splitting to separate EICs. The details are
-#' described in the reference and flowchart.
-#' 
-#' @param x A matrix with columns of m/z, retention time, intensity.
-#' @param min.pres Run filter parameter. The minimum proportion of presence in
-#' the time period for a series of signals grouped by m/z to be considered a
-#' peak.
-#' @param min.run Run filter parameter. The minimum length of elution time for
-#' a series of signals grouped by m/z to be considered a peak.
-#' @param tol m/z tolerance level for the grouping of data points. This value
-#' is expressed as the fraction of the m/z value. This value, multiplied by the
-#' m/z value, becomes the cutoff level. The recommended value is the machine's
-#' nominal accuracy level. Divide the ppm value by 1e6. For FTMS, 1e-5 is
-#' recommended.
-#' @param baseline.correct After grouping the observations, the highest
-#' intensity in each group is found. If the highest is lower than this value,
-#' the entire group will be deleted. The default value is NA, in which case the
-#' program uses the 75th percentile of the height of the noise groups.
-#' @return A list is returned.  \item{height.rec}{The records of the height of
-#' each EIC.} \item{masses}{ The vector of m/z values after binning. }
-#' \item{labels}{ The vector of retention time after binning. } \item{intensi}{
-#' The vector of intensity values after binning. } \item{grps}{ The EIC labels,
-#' i.e. which EIC each observed data point belongs to. } \item{times}{ All the
-#' unique retention time values, ordered. } \item{tol}{ The m/z tolerance
-#' level. } \item{min.count.run}{ The minimum number of elution time points for
-#' a series of signals grouped by m/z to be considered a peak.}
-#' @author Tianwei Yu <tyu8@@emory.edu>
-#' @references Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
-#' @keywords models
-#' @examples
-#' 
 adaptive.bin <-
-function(x, min.run, min.pres, tol, baseline.correct)
+function(x, min.run, min.pres, tol, baseline.correct, weighted=FALSE)
 {
     masses<-x$masses
     labels<-x$labels
@@ -60,7 +24,12 @@ function(x, min.run, min.pres, tol, baseline.correct)
     l<-length(masses)
     
     curr.bw<-0.5*tol*max(masses)
-    all.mass.den<-density(masses, weights=intensi/sum(intensi), bw=curr.bw, n=2^min(15, floor(log2(l))-2))
+    if(weighted)
+    {
+        all.mass.den<-density(masses, weights=intensi/sum(intensi), bw=curr.bw, n=2^min(15, floor(log2(l))-2))
+    }else{
+        all.mass.den<-density(masses, bw=curr.bw, n=2^min(15, floor(log2(l))-2))
+    }
     all.mass.turns<-find.turn.point(all.mass.den$y)
     all.mass.vlys<-all.mass.den$x[all.mass.turns$vlys]
     breaks<-c(0, unique(round(approx(masses,1:l,xout=all.mass.vlys,rule=2,ties='ordered')$y))[-1])
@@ -95,7 +64,12 @@ function(x, min.run, min.pres, tol, baseline.correct)
             this.labels<-this.labels[curr.order]
             
             this.bw=0.5*tol*median(this.masses)
-            mass.den<-density(this.masses, weights=this.intensi/sum(this.intensi), bw=this.bw)
+            if(weighted)
+            {
+                mass.den<-density(this.masses, weights=this.intensi/sum(this.intensi), bw=this.bw)
+            }else{
+                mass.den<-density(this.masses, bw=this.bw)
+            }
             mass.den$y[mass.den$y < min(this.intensi)/10]<-0
             mass.turns<-find.turn.point(mass.den$y)
             mass.pks<-mass.den$x[mass.turns$pks]

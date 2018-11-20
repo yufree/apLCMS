@@ -1,13 +1,9 @@
 semi.sup <-
-function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.pres=0.5, min.run=12, mz.tol=1e-5, baseline.correct.noise.percentile=0.25, shape.model="bi-Gaussian",  baseline.correct=0, peak.estim.method="moment", min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim=c(0.33, 3), subs=NULL, align.mz.tol=NA, align.chr.tol=NA, max.align.mz.diff=0.01, pre.process=FALSE, recover.mz.range=NA, recover.chr.range=NA, use.observed.range=TRUE, match.tol.ppm=NA, new.feature.min.count=2, recover.min.count=3)
+function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.pres=0.5, min.run=12, mz.tol=1e-5, baseline.correct.noise.percentile=0.05, shape.model="bi-Gaussian", BIC.factor=2, baseline.correct=0, peak.estim.method="moment", min.bw=NA, max.bw=NA, sd.cut=c(0.01,500), sigma.ratio.lim=c(0.01, 100), component.eliminate=0.01, moment.power=1, subs=NULL, align.mz.tol=NA, align.chr.tol=NA, max.align.mz.diff=0.01, pre.process=FALSE, recover.mz.range=NA, recover.chr.range=NA, use.observed.range=TRUE, match.tol.ppm=NA, new.feature.min.count=2, recover.min.count=3, intensity.weighted=FALSE)
 {
     library(mzR)
     library(doParallel)
     setwd(folder)
-    cl <- makeCluster(n.nodes)
-    registerDoParallel(cl)
-    #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
-    clusterEvalQ(cl, library(apLCMS))
     
     files<-dir(pattern=file.pattern, ignore.case = TRUE)
     files<-files[order(files)]
@@ -21,17 +17,24 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     dir.create("error_files")
     message("***************************** prifiles --> feature lists *****************************")
     suf.prof<-paste(min.pres,min.run,mz.tol,baseline.correct,sep="_")
-    suf<-paste(suf.prof, shape.model, sd.cut[1], sd.cut[2],sep="_")
+    suf<-paste(suf.prof, shape.model, sd.cut[1], sd.cut[2],component.eliminate, moment.power, sep="_")
     if(shape.model=="bi-Gaussian") suf<-paste(suf, sigma.ratio.lim[1], sigma.ratio.lim[2],sep="_")
     
     to.do<-paste(matrix(unlist(strsplit(tolower(files),"\\.")),nrow=2)[1,],suf, min.bw, max.bw,".feature",sep="_")
     to.do<-which(!(to.do %in% dir()))
     message(c("number of files to process: ", length(to.do)))
     
+    
     if(length(to.do)>0)
     {
         grps<-round(seq(0, length(to.do), length=n.nodes+1))
         grps<-unique(grps)
+        
+        cl <- makeCluster(n.nodes)
+        registerDoParallel(cl)
+        #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+        clusterEvalQ(cl, library(apLCMS))
+
         
         features<-foreach(i=2:length(grps)) %dopar%
         {
@@ -44,7 +47,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                 that.name<-paste(strsplit(tolower(files[j]),"\\.")[[1]][1],suf.prof,".profile",sep="_")
                 
                 processable<-"goodgood"
-                processable<-try(this.prof<-proc.cdf(files[j], min.pres=min.pres, min.run=min.run, tol=mz.tol, baseline.correct=baseline.correct, baseline.correct.noise.percentile=baseline.correct.noise.percentile, do.plot=FALSE))
+                processable<-try(this.prof<-proc.cdf(files[j], min.pres=min.pres, min.run=min.run, tol=mz.tol, baseline.correct=baseline.correct, baseline.correct.noise.percentile=baseline.correct.noise.percentile, do.plot=FALSE, intensity.weighted=intensity.weighted))
                 if(substr(processable,1,5)=="Error")
                 {
                     file.copy(from=files[j], to="error_files")
@@ -56,7 +59,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                 if(substr(processable,1,5)!="Error")
                 {
                     processable.2<-"goodgood"
-                    processable.2<-try(this.feature<-prof.to.features(this.prof, min.bw=min.bw, max.bw=max.bw, sd.cut=sd.cut, shape.model=shape.model, estim.method=peak.estim.method, do.plot=FALSE))
+                    processable.2<-try(this.feature<-prof.to.features(this.prof, min.bw=min.bw, max.bw=max.bw, sd.cut=sd.cut, shape.model=shape.model, estim.method=peak.estim.method, do.plot=FALSE, component.eliminate=component.eliminate, power=moment.power, BIC.factor=BIC.factor))
                     
                     if(substr(processable.2,1,5)=="Error")
                     {
@@ -69,8 +72,9 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                 }
             }
         }
+        stopCluster(cl)
     }
-    
+
     all.files<-dir()
     sel<-which(files %in% all.files)
     files<-files[sel]
@@ -92,30 +96,48 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     all.files<-dir()
     is.done<-all.files[which(all.files == this.name)]
     
+
     if(length(is.done)==0)
     {
+        cl <- makeCluster(n.nodes)
+        registerDoParallel(cl)
+        #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+        clusterEvalQ(cl, library(apLCMS))
+
         message(c("***** correcting time, CPU time (seconds) ",as.vector(system.time(f2<-adjust.time(features,mz.tol=align.mz.tol, chr.tol=align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)))[1]))
+        
+        stopCluster(cl)
         save(f2,file=this.name)
     }else{
         load(this.name)
     }
+    
     gc()
     
     ###############################################################################################
     message("****************************  aligning features **************************************")
-    suf<-paste(suf,1,sep="_")
+    suf<-paste(suf,min.exp,sep="_")
     this.name<-paste("aligned_done_",suf,".bin",sep="")
     all.files<-dir()
     is.done<-all.files[which(all.files == this.name)]
+    
+
     if(length(is.done)==0)
     {
+        cl <- makeCluster(n.nodes)
+        registerDoParallel(cl)
+        #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+        clusterEvalQ(cl, library(apLCMS))
+
         message(c("***** aligning features, CPU time (seconds): ", as.vector(system.time(aligned<-feature.align(f2, min.exp=min.exp,mz.tol=align.mz.tol,chr.tol=align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)))[1]))
         save(aligned,file=this.name)
+        stopCluster(cl)
     }else{
         load(this.name)
     }
     gc()
     
+
     ###############################################################################################
     message("************************* merging to known peak table *********************************")
     if(is.na(match.tol.ppm)) match.tol.ppm<-aligned$mz.tol*1e6
@@ -234,7 +256,11 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         grps<-round(seq(0, length(to.do), length=n.nodes+1))
         grps<-unique(grps)
         
-        
+        cl <- makeCluster(n.nodes)
+        registerDoParallel(cl)
+        #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+        clusterEvalQ(cl, library(apLCMS))
+
         features.recov<-foreach(i=2:length(grps)) %dopar%
         {
             this.subset<-to.do[(grps[i-1]+1):grps[i]]
@@ -245,9 +271,11 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                 save(this.recovered, file=this.name)
             }
         }
+        stopCluster(cl)
         gc()
     }
     
+
     ##############################################################################################
     message("loading feature tables after recovery")
     features.recov<-new("list")
@@ -269,8 +297,14 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     
     if(length(is.done)==0)
     {
+        cl <- makeCluster(n.nodes)
+        registerDoParallel(cl)
+        #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+        clusterEvalQ(cl, library(apLCMS))
+
         message(c("***** correcting time, CPU time (seconds) ",as.vector(system.time(f2.recov<-adjust.time(features.recov, mz.tol=align.mz.tol, chr.tol=align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)))[1]))
         save(f2.recov,file=this.name)
+        stopCluster(cl)
     }else{
         load(this.name)
     }
@@ -283,8 +317,14 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     is.done<-all.files[which(all.files == this.name)]
     if(length(is.done)==0)
     {
+        cl <- makeCluster(n.nodes)
+        registerDoParallel(cl)
+        #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
+        clusterEvalQ(cl, library(apLCMS))
+
         message(c("***** aligning features, CPU time (seconds): ", as.vector(system.time(aligned.recov<-feature.align(f2.recov, min.exp=min.exp,mz.tol=align.mz.tol,chr.tol=align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)))[1]))
         save(aligned.recov,file=this.name)
+        stopCluster(cl)
     }else{
         load(this.name)
     }
@@ -400,6 +440,5 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     rec$updated.known.table<-known.2
     rec$ftrs.known.table.pairing<-new.known.pairing
     
-    stopCluster(cl)
     return(rec)
 }

@@ -1,5 +1,5 @@
 prof.to.features <-
-function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim=c(0.2, 5), shape.model="bi-Gaussian", estim.method="moment",do.plot=TRUE)
+function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(0.1,100), sigma.ratio.lim=c(0.1, 10), shape.model="bi-Gaussian", estim.method="moment",do.plot=TRUE, power=1, component.eliminate=0.01, BIC.factor=2)
 {
     if(sum(shape.model %in% c("bi-Gaussian", "Gaussian")) == 0)
     {
@@ -198,7 +198,13 @@ function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim
             d<-c(d1*s1,d2*s2)                            # notice this "density" doesnt integrate to 1. Rather it integrates to (s1+s2)/2
             y<-y.0
             
-            scale<-exp(sum(d^2*log(y/d))/sum(d^2))
+            dy.ratio<-d^2*log(y/d)
+            dy.ratio[is.na(dy.ratio)]<-0
+            dy.ratio[dy.ratio == -Inf]<-0
+            dy.ratio[dy.ratio == Inf]<-0
+            
+            
+            scale<-exp(sum(dy.ratio)/sum(d^2))
             
             if(do.plot)
             {
@@ -219,9 +225,13 @@ function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim
     }
     
     ##############
-    bigauss.mix<-function(x,y,power=1, do.plot=FALSE, sigma.ratio.lim=c(0.1, 10), bw=c(15,30,60), eliminate=.05, max.iter=25, estim.method)
+    bigauss.mix<-function(x,y,power=1, do.plot=FALSE, sigma.ratio.lim=c(0.1, 10), bw=c(15,30,60), eliminate=.05, max.iter=25, estim.method, BIC.factor=2)
     {
         all.bw<-bw[order(bw)]
+        
+        x.0<-x
+        y.0<-y
+        
         sel<-y>1e-5
         x<-x[sel]
         y<-y[sel]
@@ -243,7 +253,7 @@ function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim
         for(bw.n in length(all.bw):1)
         {
             bw<-all.bw[bw.n]
-            this.smooth<-ksmooth(x,y, kernel="normal", bandwidth=bw)
+            this.smooth<-ksmooth(x.0,y.0, kernel="normal", bandwidth=bw)
             turns<-find.turn.point(this.smooth$y)
             pks<-this.smooth$x[turns$pks]
             vlys<-c(-Inf, this.smooth$x[turns$vlys], Inf)
@@ -374,7 +384,7 @@ function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim
                 area<-delta*(s1+s2)/2
                 rss<-sum((y-apply(fit,1,sum))^2)
                 l<-length(x)
-                bic<-l*log(rss/l)+4*length(m)*log(l)
+                bic<-l*log(rss/l)+4*length(m)*log(l)*BIC.factor
                 results[[bw.n]]<-cbind(m,s1,s2,delta,area)
                 bic.rec[bw.n]<-bic
             }else{
@@ -527,7 +537,7 @@ function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim
     
     ##########
     
-    normix.bic<-function(x,y,power=4, do.plot=FALSE, bw=c(15,30,60), eliminate=.05, max.iter=50)
+    normix.bic<-function(x,y,power=2, do.plot=FALSE, bw=c(15,30,60), eliminate=.05, max.iter=50, BIC.factor=2)
     {
         all.bw<-bw[order(bw)]
         sel<-y>1e-5
@@ -582,7 +592,7 @@ function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim
                 
                 rss<-sum((y-total.fit)^2)
                 l<-length(x)
-                bic<-l*log(rss/l)+3*nrow(aaa)*log(l)
+                bic<-l*log(rss/l)+3*nrow(aaa)*log(l)*BIC.factor
                 results[[bw.n]]<-aaa
                 bic.rec[bw.n]<-bic
             }else{
@@ -604,9 +614,9 @@ function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim
     
     ##########
     
-    if(is.na(min.bw)) min.bw<-diff(range(a[,2], na.rm=TRUE))/30
+    if(is.na(min.bw)) min.bw<-diff(range(a[,2], na.rm=TRUE))/60
     if(is.na(max.bw)) max.bw<-diff(range(a[,2], na.rm=TRUE))/15
-    if(min.bw >= max.bw) min.bw<-max.bw/2
+    if(min.bw >= max.bw) min.bw<-max.bw/4
     
     base.curve<-unique(a[,2])
     all.span<-range(base.curve)
@@ -653,12 +663,12 @@ function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim
             this.curve[this.curve[,1] %in% this[,2],2]<-this[,3]
             
             bw<-min(max(bandwidth*(this.span[2]-this.span[1]),min.bw), max.bw)
-            bw<-c(bw, 2*bw)
+            bw<-seq(bw, 2*bw, length.out=3)
             if(bw[1] > 1.5*min.bw) bw<-c(max(min.bw, bw[1]/2), bw)
             
             if(shape.model == "Gaussian")
             {
-                xxx<-normix.bic(this.curve[,1], this.curve[,2], bw=bw)$param
+                xxx<-normix.bic(this.curve[,1], this.curve[,2], power=power, bw=bw, eliminate=component.eliminate, BIC.factor=BIC.factor)$param
                 if(nrow(xxx) == 1)
                 {
                     xxx<-c(xxx[1,1:2],xxx[1,2],xxx[1,3])
@@ -666,7 +676,7 @@ function(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim
                     xxx<-cbind(xxx[,1:2],xxx[,2],xxx[,3])
                 }
             }else{
-                xxx<-bigauss.mix(this.curve[,1], this.curve[,2], sigma.ratio.lim=sigma.ratio.lim, bw=bw, power=2, estim.method=estim.method)$param[,c(1,2,3,5)]
+                xxx<-bigauss.mix(this.curve[,1], this.curve[,2], sigma.ratio.lim=sigma.ratio.lim, bw=bw, power=power, estim.method=estim.method, eliminate=component.eliminate, BIC.factor=BIC.factor)$param[,c(1,2,3,5)]
             }
             
             if(is.null(nrow(xxx)))

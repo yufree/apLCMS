@@ -5,7 +5,9 @@
   Given an output object from the function cdf.to.ftr(), this function plots the EICs selected by the user. 
 }
 \usage{
-EIC.plot(aligned, rows = NA, colors = NA, transform = "none", subset=NA, min.run, min.pres)
+EIC.plot(aligned, rows = NA, colors = NA, transform = "none",
+                 subset = NA, min.run, min.pres, max.spline.time.points
+                 = 1000)
 }
 \arguments{
   \item{aligned}{ An output object from cdf.to.ftr(). }
@@ -15,6 +17,7 @@ EIC.plot(aligned, rows = NA, colors = NA, transform = "none", subset=NA, min.run
   \item{subset}{ The user can choose a subset of the profiles for which the EICs are plotted. It is given as a vector of profile indecies. The default is NA, in which case the EICs from all the profiles are plotted. }
   \item{min.run}{ The min.run parameter used in the proc.cdf() step. }
   \item{min.pres}{ The min.pres parameter used in the proc.cdf() step. }
+  \item{max.spline.time.points}{ The maximum time points to use in spline fit. }
 }
 \details{
   The EICs are plotted as overlaid line plots. 

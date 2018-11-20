@@ -5,7 +5,7 @@
 The semi-supervised procedure utilizes a database of known metabolites and previously detected features to identify features in a new dataset. It is recommended ONLY for experienced users. The user may need to construct the known feature database that strictly follows the format described below. 
 }
 \usage{
-semi.sup(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.pres=0.5, min.run=12, mz.tol=1e-5, baseline.correct.noise.percentile=0.25, shape.model="bi-Gaussian",  baseline.correct=NA, peak.estim.method="moment", min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim=c(0.33, 3), subs=NULL, align.mz.tol=NA, align.chr.tol=NA, max.align.mz.diff=0.01, pre.process=FALSE, recover.mz.range=NA, recover.chr.range=NA, use.observed.range=TRUE, match.tol.ppm=NA, new.feature.min.count=2, recover.min.count=3)
+semi.sup(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.pres=0.5, min.run=12, mz.tol=1e-5, baseline.correct.noise.percentile=0.25, shape.model="bi-Gaussian",  BIC.factor=2, baseline.correct=0, peak.estim.method="moment", min.bw=NA, max.bw=NA, sd.cut=c(0.01,500), sigma.ratio.lim=c(0.01, 100), component.eliminate=0.01, moment.power=1, subs=NULL, align.mz.tol=NA, align.chr.tol=NA, max.align.mz.diff=0.01, pre.process=FALSE, recover.mz.range=NA, recover.chr.range=NA, use.observed.range=TRUE, match.tol.ppm=NA, new.feature.min.count=2, recover.min.count=3, intensity.weighted=FALSE)
 }
 \arguments{
   \item{folder}{ The folder where all CDF files to be processed are located. For example “C:/CDF/this_experiment” }
@@ -37,13 +37,16 @@ semi.sup(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
   \item{subs}{ If not all the CDF files in the folder are to be processed, the user can define a subset using this parameter. For example, subs=15:30, or subs=c(2,4,6,8) }
   \item{mz.tol}{ The user can provide the m/z tolerance level for peak identification. This value is expressed as the percentage of the m/z value. This value, multiplied by the m/z value, becomes the cutoff level. Please see the help for proc.cdf() for details.}
   \item{baseline.correct.noise.percentile}{ The perenctile of signal strength of those EIC that don't pass the run filter, to be used as the baseline threshold of signal strength. This parameter is passed to proc.cdf() }
-  \item{shape.model}{ The mathematical model for the shape of a peak. There are two choices - “bi-Gaussian” and “Gaussian”. When the peaks are asymmetric, the bi-Gaussian is better. The default is “bi-Gaussian”.}
+  \item{shape.model}{ The mathematical model for the shape of a peak. There are two choices - bi-Gaussian and Gaussian. When the peaks are asymmetric, the bi-Gaussian is better. The default is bi-Gaussian.}
+  \item{BIC.factor}{the factor that is multiplied on the number of parameters to modify the BIC criterion. If larger than 1, models with more peaks are penalized more.}
   \item{baseline.correct}{This is a parameter in peak detection. After grouping the observations, the highest observation in each group is found. If the highest is lower than this value, the entire group will be deleted. The default value is NA, which allows the program to search for the cutoff level. Please see the help for proc.cdf() for details.}
   \item{peak.estim.method}{the bi-Gaussian peak parameter estimation method, to be passed to subroutine prof.to.features. Two possible values: moment and EM.}
   \item{min.bw}{The minimum bandwidth in the smoother in prof.to.features(). Please see the help file for prof.to.features() for details.}
   \item{max.bw}{The maximum bandwidth in the smoother in prof.to.features(). Please see the help file for prof.to.features() for details.}
   \item{sd.cut}{A parameter for the prof.to.features() function. A vector of two. Features with standard deviation outside the range defined by the two numbers are eliminated.}
   \item{sigma.ratio.lim}{A parameter for the prof.to.features() function. A vector of two. It enforces the belief of the range of the ratio between the left-standard deviation and the righ-standard deviation of the bi-Gaussian fuction used to fit the data.}
+  \item{component.eliminate}{In fitting mixture of bi-Gaussian (or Gaussian) model of an EIC, when a component accounts for a proportion of intensities less than this value, the component will be ignored.}
+  \item{moment.power}{The power parameter for data transformation when fitting the bi-Gaussian or Gaussian mixture model in an EIC.}
   \item{align.chr.tol}{ The user can provide the elution time tolerance level to override the program’s selection. This value is in the same unit as the elution time, normaly seconds. Please see the help for match.time() for details.}
   \item{align.mz.tol}{ The user can provide the m/z tolerance level for peak alignment to override the program’s selection.  This value is expressed as the percentage of the m/z value. This value, multiplied by the m/z value, becomes the cutoff level.Please see the help for feature.align() for details.}
     \item{max.align.mz.diff}{As the m/z tolerance in alignment is expressed in relative terms (ppm), it may not be suitable when the m/z range is wide. This parameter limits the tolerance in absolute terms. It mostly influences feature matching in higher m/z range.}
@@ -71,6 +74,7 @@ A list is returned.
   \item{align.chr.tol}{The retention time tolerance level in the alignment across spectra, either input from the user or automatically selected when the user input is NA.}
   \item{updated.known.table}{ The known table updated using the newly processed data. It should be used for future datasets generated using the same machine and LC column. }
   \item{ftrs.known.table.pairing}{ The paring information between the feature table of the current dataset and the known feature tabel. }
+  \item{intensity.weighted}{Whether to weight the local density by signal intensities in the initial peak detection stage.}
 }
 \references{}
 \author{ Tianwei Yu < tianwei.yu@emory.edu> }

@@ -5,7 +5,10 @@
   Given an output object from the function semi.sup.learn(), this function plots the EICs selected by the user. 
 }
 \usage{
-EIC.plot.learn(aligned, rows = NA, colors = NA, transform = "none", subset = NA, tol,  ridge.smoother.window = 50, baseline.correct = NA, max.spline.time.points = 1000)
+EIC.plot.learn(aligned, rows = NA, colors = NA, transform = "none",
+                 subset = NA, tol = 2.5e-05, ridge.smoother.window =
+                 50, baseline.correct = 0, max.spline.time.points =
+                 1000)
 }
 \arguments{
   \item{aligned}{ An output object from cdf.to.ftr(). }

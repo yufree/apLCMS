@@ -7,7 +7,7 @@
   Each LC/MS profile is first processed by the function proc.cdf() to remove noise and reduce data size. A matrix containing m/z value, retention time, intensity, and group number is output from proc.cdf(). This matrix is then fed to the function prof.to.features() to generate a feature list. Every detected feature is summarized into a single row in the output matrix from this function. 
 }
 \usage{
-prof.to.features(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim=c(0.2, 5), shape.model="bi-Gaussian", estim.method="moment",do.plot=TRUE)
+prof.to.features(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim=c(0.2, 5), shape.model="bi-Gaussian", estim.method="moment",do.plot=TRUE, power=2, component.eliminate=0.01, BIC.factor=2)
 }
 %- maybe also 'usage' for other objects documented here.
 \arguments{
@@ -20,6 +20,9 @@ prof.to.features(a, bandwidth=0.5, min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.r
   \item{shape.model}{ The mathematical model for the shape of a peak. There are two choices - “bi-Gaussian” and “Gaussian”. When the peaks are asymmetric, the bi-Gaussian is better. The default is “bi-Gaussian”.}
   \item{estim.method}{The estimation method for the bi-Gaussian peak model. Two possible values: moment and EM.}
   \item{do.plot}{Whether to generate diagnostic plots.}
+  \item{component.eliminate}{In fitting mixture of bi-Gaussian (or Gaussian) model of an EIC, when a component accounts for a proportion of intensities less than this value, the component will be ignored.}
+  \item{power}{The power parameter for data transformation when fitting the bi-Gaussian or Gaussian mixture model in an EIC.}
+  \item{BIC.factor}{the factor that is multiplied on the number of parameters to modify the BIC criterion. If larger than 1, models with more peaks are penalized more.}
 }
 \details{
   This function generates the feature table from the noise-removed profile. The m/z values are already grouped by the function proc.cdf() to generate EICs. The task of this function is to look at every EIC and determine (1) how many peaks there are, and (2) the location, spread and area of each peak.
