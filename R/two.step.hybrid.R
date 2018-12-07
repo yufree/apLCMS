@@ -4,10 +4,10 @@ two.step.hybrid <-function(folder, info, min.within.batch.prop.detect=0.1, min.w
     setwd(folder)
     info<-as.matrix(as.data.frame(info))
     batches<-unique(info[,2])
-    
+
     batchwise<-new("list")
     message("total number of batches: ", length(batches))
-    
+
     for(batch.i in 1:length(batches))
     {
         message("working on batch number ", batch.i)
@@ -17,38 +17,38 @@ two.step.hybrid <-function(folder, info, min.within.batch.prop.detect=0.1, min.w
 		message("total number of files in this batch ", length(this.subs))
 
         b<-semi.sup(folder,n.nodes=n.nodes, subs=this.subs, file.pattern=file.pattern,known.table=known.table, sd.cut=sd.cut,sigma.ratio.lim=sigma.ratio.lim, component.eliminate=component.eliminate, moment.power=moment.power, min.pres=min.pres, min.run=min.run, min.exp=ceiling(min.within.batch.prop.detect*length(this.subs)), mz.tol=mz.tol, baseline.correct.noise.percentile=baseline.correct.noise.percentile, align.mz.tol=align.mz.tol, align.chr.tol=align.chr.tol, max.align.mz.diff=max.align.mz.diff, recover.mz.range=recover.mz.range, recover.chr.range=recover.chr.range,use.observed.range=use.observed.range, shape.model=shape.model,new.feature.min.count=new.feature.min.count, recover.min.count=recover.min.count)
-        
+
         b$final.ftrs<-b$final.ftrs[order(b$final.ftrs[,1], b$final.ftrs[,2]),]
         b$final.times<-b$final.times[order(b$final.times[,1], b$final.times[,2]),]
-        
+
         batchwise[[batch.i]]<-b
     }
-    
+
     fake.features<-new("list")
     for(batch.i in 1:length(batches))
-    {        
+    {
         this.fake<-batchwise[[batch.i]]$final.ftrs
         this.fake[,3:4]<-NA
         this.fake[,5]<-apply(this.fake[,-1:-4],1,median)
         this.fake<-this.fake[,1:5]
-        fake.features[[batch.i]]<-this.fake   
+        fake.features[[batch.i]]<-this.fake
     }
-    
-    cl <- makeCluster(n.nodes)
+
+    cl <- makeCluster(n.nodes,type='SOCK')
     registerDoParallel(cl)
     #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
     clusterEvalQ(cl, library(apLCMS))
-    
+
     fake2<-adjust.time(fake.features,mz.tol=batch.align.mz.tol, chr.tol=batch.align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)
-    
+
     message("Alignment across batches")
     fake3<-feature.align(fake2, min.exp=ceiling(min.batch.prop*length(batches)), mz.tol=batch.align.mz.tol,chr.tol=batch.align.chr.tol, find.tol.max.d=10*mz.tol, max.align.mz.diff=max.align.mz.diff)
-    
+
     stopCluster(cl)
 
     message("Recovery across batches")
-    
-    cl <- makeCluster(n.nodes)
+
+    cl <- makeCluster(n.nodes,type='SOCK')
     registerDoParallel(cl)
     #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
     clusterEvalQ(cl, library(apLCMS))
@@ -58,14 +58,14 @@ two.step.hybrid <-function(folder, info, min.within.batch.prop.detect=0.1, min.w
         this.fake<-batchwise[[batch.i]]$final.ftrs
         this.features<-batchwise[[batch.i]]$features2
         this.medians<-apply(this.fake[,-1:-4],1,median)
-        
+
         orig.time<-this.fake[,2]
         adjusted.time<-fake2[[batch.i]][,2]
-        
+
         this.aligned<-matrix(0, nrow=nrow(fake3$aligned.ftrs), ncol=ncol(this.fake)-4)
-        
+
         # adjusting the time (already within batch adjusted)
-        
+
         for(j in 1:length(this.features))
         {
             for(i in 1:nrow(this.features[[j]]))
@@ -75,7 +75,7 @@ two.step.hybrid <-function(folder, info, min.within.batch.prop.detect=0.1, min.w
                 this.features[[j]][i,2] <- adjusted.time[sel]
             }
         }
-        
+
         for(i in 1:nrow(this.aligned))
         {
             if(fake3$aligned[i, batch.i+4] != 0)
@@ -102,20 +102,20 @@ two.step.hybrid <-function(folder, info, min.within.batch.prop.detect=0.1, min.w
                     diff.time<-abs(this.features[[j]][,2]-fake3$aligned[i,2])
                     sel<-which(diff.mz < fake3$aligned[i,1]*batch.align.mz.tol & diff.time <= batch.align.chr.tol)
                     if(length(sel)>1) sel<-sel[which(diff.time[sel] == min(diff.time[sel]))[1]]
-                    
+
                     if(length(sel) ==1) recaptured[j]<-this.features[[j]][sel,5]
                 }
                 this.aligned[i, ]<-recaptured
             }
         }
-        
+
         colnames(this.aligned)<-colnames(this.fake)[-1:-4]
-        
+
         this.aligned
     }
-    
+
     aligned<-cbind(fake3$aligned.ftrs[,1:4], aligned)
-    
+
 	batch.presence.mat<-matrix(0, nrow=nrow(aligned), ncol=length(batches))
 	for(batch.i in 1:length(batches))
 	{
@@ -127,7 +127,7 @@ two.step.hybrid <-function(folder, info, min.within.batch.prop.detect=0.1, min.w
 	}
 	batch.presence<-apply(batch.presence.mat,1,sum)/ncol(batch.presence.mat)
 	final.aligned<-aligned[which(batch.presence >= min.batch.prop),]
-	
+
     stopCluster(cl)
     to.return<-new("list")
     to.return$batchwise.results<-batchwise

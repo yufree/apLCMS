@@ -9,7 +9,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
             n<-1
             m<-2
             to.remove<-rep(0, nrow(new.table))
-            
+
             while(m <= nrow(new.table))
             {
                 if(abs(new.table[m,1]-new.table[n,1])<1e-10 & abs(new.table[m,2]-new.table[n,2])<1e-10 & abs(new.table[m,5]-new.table[n,5])<1e-10)
@@ -22,44 +22,44 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                 }
                 #cat("*(", n, m, ")")
             }
-            
+
             if(sum(to.remove)>0) new.table<-new.table[-which(to.remove==1),]
             new.table
         }
-        
+
         library(splines)
         library(mzR)
         if(is.na(mz.range)) mz.range<-1.5*align.mz.tol
         if(is.na(chr.range)) chr.range<-align.chr.tol/2
-        
+
         this.raw<-load.lcms(filename)
         masses<-this.raw$masses
         intensi<-this.raw$intensi
         labels<-this.raw$labels
         times<-this.raw$times
         rm(this.raw)
-        
+
         times<-times[order(times)]
         base.curve<-unique(times)
         base.curve<-base.curve[order(base.curve)]
         base.curve<-cbind(base.curve, base.curve*0)
-        
-        
+
+
         masses<-c(masses, -100000)
         mass.breaks<-which(masses[1:(length(masses)-1)] > masses[2:length(masses)])
         mass.breaks<-c(0,mass.breaks)
         masses<-masses[1:(length(masses)-1)]
-        
+
         curr.order<-order(masses)
         intensi<-intensi[curr.order]
         labels<-labels[curr.order]
         masses<-masses[curr.order]
-        
-        
+
+
         if(is.na(min.bw)) min.bw<-diff(range(times, na.rm=TRUE))/60
         if(is.na(max.bw)) max.bw<-diff(range(times, na.rm=TRUE))/15
         if(min.bw >= max.bw) min.bw<-max.bw/4
-        
+
         base.curve<-times
         aver.diff<-mean(diff(base.curve))
         base.curve<-cbind(base.curve, base.curve*0)
@@ -68,22 +68,22 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         all.times<-c(all.times, 2*all.times[length(all.times)]-all.times[length(all.times)-1])
         all.times<-(all.times[1:(length(all.times)-1)]+all.times[2:length(all.times)])/2
         all.times<-all.times[2:length(all.times)]-all.times[1:(length(all.times)-1)]
-        
+
         this.ftrs<-aligned.ftrs[, (loc+4)]
         this.times<-pk.times[,(loc+4)]
         custom.mz.tol<-mz.range*aligned.ftrs[,1]
         observed.mz.range<-(aligned.ftrs[,4]-aligned.ftrs[,3])/2
         #	if(use.observed.range) custom.mz.tol[which(custom.mz.tol < observed.mz.range)]<-observed.mz.range[which(custom.mz.tol < observed.mz.range)]
-        
+
         custom.chr.tol<-rep(chr.range, nrow(aligned.ftrs))
-        
+
         if(use.observed.range)
         {
             observed.chr.range<-(apply(pk.times[,5:ncol(pk.times)],1,max)-apply(pk.times[,5:ncol(pk.times)],1,min))/2
             num.present<-apply(!is.na(pk.times[,5:ncol(pk.times)]),1,sum)
             custom.chr.tol[which(num.present>=5 & custom.chr.tol > observed.chr.range)]<-observed.chr.range[which(num.present>=5 & custom.chr.tol > observed.chr.range)]
         }
-        
+
         l<-length(masses)
         curr.bw<-0.5*orig.tol*max(masses)
         all.mass.den<-density(masses, weights=intensi/sum(intensi), bw=curr.bw, n=2^min(15, floor(log2(l))-2))
@@ -93,7 +93,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         this.mz<-rep(NA, length(this.ftrs))
         this.f1<-matrix(rep(NA,5),nrow=1)
         target.time<-aligned.ftrs[,2]
-        
+
         for(i in 1:length(this.ftrs))
         {
             if(this.ftrs[i] == 0 & aligned.ftrs[i,1] < masses[breaks[length(breaks)]])
@@ -105,14 +105,14 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                     this.found<-c(which(abs(masses[breaks]-aligned.ftrs[i,1]) < custom.mz.tol[i]), min(which(masses[breaks] > aligned.ftrs[i,1])), max(which(masses[breaks] < aligned.ftrs[i,1])))+1
                     this.found<-c(min(this.found), max(this.found))
                 }
-                
+
                 if(length(this.found)>1)
                 {
                     this.sel<-(breaks[this.found[1]]+1):breaks[this.found[2]]
                     this.masses<-masses[this.sel]
                     this.labels<-labels[this.sel]
                     this.intensi<-intensi[this.sel]
-                    
+
                     this.bw=0.5*orig.tol*aligned.ftrs[i,1]
                     mass.den<-density(this.masses, weights=this.intensi/sum(this.intensi), bw=this.bw)
                     mass.den$y[mass.den$y < min(this.intensi)/10]<-0
@@ -120,7 +120,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                     mass.pks<-mass.den$x[mass.turns$pks]
                     mass.vlys<-c(-Inf, mass.den$x[mass.turns$vlys], Inf)
                     mass.pks<-mass.pks[which(abs(mass.pks-aligned.ftrs[i,1]) < custom.mz.tol[i]/1.5)]
-                    
+
                     if(length(mass.pks) > 0)
                     {
                         this.rec<-matrix(c(Inf, Inf, Inf),nrow=1)
@@ -128,7 +128,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                         {
                             mass.lower<-max(mass.vlys[mass.vlys < mass.pks[k]])
                             mass.upper<-min(mass.vlys[mass.vlys > mass.pks[k]])
-                            
+
                             that.sel<-which(this.masses > mass.lower & this.masses <= mass.upper)
                             if(length(that.sel) > recover.min.count)
                             {
@@ -139,14 +139,14 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                                 that.labels<-that.labels[that.order]
                                 that.masses<-that.masses[that.order]
                                 that.intensi<-that.intensi[that.order]
-                                
+
                                 that.prof<-merge.seq.3(that.labels, that.masses, that.intensi)
-                                
+
                                 that.mass<-sum(that.prof[,1]*that.prof[,3])/sum(that.prof[,3])
                                 curr.rec<-c(that.mass, NA,NA)
                                 if(nrow(that.prof) < 10)
                                 {
-                                    
+
                                     if(!is.na(target.time[i]))
                                     {
                                         thee.sel<-which(abs(that.prof[,2]-target.time[i]) < custom.chr.tol[i]*2)
@@ -171,7 +171,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                                     this.span<-range(this[,1])
                                     this.curve<-base.curve[base.curve[,1]>=this.span[1] & base.curve[,1] <=this.span[2],]
                                     this.curve[this.curve[,1] %in% this[,1],2]<-this[,2]
-                                    
+
                                     bw<-min(max(bandwidth*(max(this[,1])-min(this[,1])),min.bw), max.bw)
                                     this.smooth<-ksmooth(this.curve[,1],this.curve[,2], kernel="normal",bandwidth=bw)
                                     smooth.y<-this.smooth$y
@@ -179,14 +179,14 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                                     pks<-this.smooth$x[turns$pks]
                                     vlys<-this.smooth$x[turns$vlys]
                                     vlys<-c(-Inf, vlys, Inf)
-                                    
+
                                     pks.n<-pks
                                     for(m in 1:length(pks))
                                     {
                                         this.vlys<-c(max(vlys[which(vlys<pks[m])]), min(vlys[which(vlys>pks[m])]))
                                         pks.n[m]<-sum(this[,1]>= this.vlys[1] & this[,1] <= this.vlys[2])
                                     }
-                                    
+
                                     if(!is.na(target.time[i]))
                                     {
                                         pks.d<-abs(pks-target.time[i])    # distance from the target peak location
@@ -195,18 +195,18 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                                     }else{
                                         pks<-pks[pks.n>recover.min.count]
                                     }
-                                    
+
                                     all.pks<-pks
                                     all.vlys<-vlys
                                     all.this<-this
-                                    
+
                                     if(length(all.pks)>0)
                                     {
                                         for(pks.i in 1:length(all.pks))
                                         {
                                             pks<-all.pks[pks.i]
                                             vlys<-c(max(all.vlys[which(all.vlys<pks)]), min(all.vlys[which(all.vlys>pks)]))
-                                            
+
                                             this<-all.this[which(all.this[,1] >= vlys[1] & all.this[,1] <= vlys[2]),]
                                             if(is.null(nrow(this)))
                                             {
@@ -215,7 +215,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                                             }else{
                                                 x<-this[,1]
                                                 y<-this[,2]
-                                                
+
                                                 if(nrow(this)>=10)
                                                 {
                                                     miu<-sum(x*y)/sum(y)
@@ -242,7 +242,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                                 }
                             }
                         }
-                        
+
                         if(!is.na(target.time[i]))
                         {
                             this.sel<-which(abs(this.rec[,2]-target.time[i])<custom.chr.tol[i])
@@ -250,8 +250,8 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
                             this.sel<-1:nrow(this.rec)
                             this.sel<-this.sel[this.sel != 1]
                         }
-                        
-                        
+
+
                         if(length(this.sel)>0)
                         {
                             if(length(this.sel)>1)
@@ -281,38 +281,38 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         to.return$this.times<-this.times
         if(!is.null(nrow(this.f1))) this.f1<-duplicate.row.remove(this.f1)
         to.return$this.f1<-this.f1
-        
+
         return(to.return)
     }
-    
+
     library(mzR)
     library(doParallel)
     setwd(folder)
-    
+
     files<-dir(pattern=file.pattern, ignore.case = TRUE)
     files<-files[order(files)]
     if(!is.null(subs))
     {
         if(!is.na(subs[1])) files<-files[subs]
     }
-    
+
     ###############################################################################################
     message("Making target peak table")
-    
+
     aligned.ftrs<-matrix(0, ncol=4+length(files), nrow=nrow(known.table))
     pk.times<-matrix(NA, ncol=4+length(files), nrow=nrow(known.table))
-    
+
     aligned.ftrs[,1]<-pk.times[,1]<-known.table[, 6]
     aligned.ftrs[,2]<-pk.times[,2]<-known.table[, 11]
     aligned.ftrs[,3]<-pk.times[,3]<-known.table[, 9]
     aligned.ftrs[,4]<-pk.times[,4]<-known.table[, 10]
-    
+
     ###############################################################################################
     message("**************************** recovering target signals *******************************")
     suf<-paste("recover", recover.mz.range, recover.chr.range, use.observed.range,match.tol.ppm,new.feature.min.count,recover.min.count,nrow(aligned.ftrs), sep="_")
-    
 
-    cl <- makeCluster(n.nodes)
+
+    cl <- makeCluster(n.nodes,type='SOCK')
     registerDoParallel(cl)
     #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
     clusterEvalQ(cl, library(apLCMS))
@@ -322,7 +322,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         this.name<-paste(strsplit(tolower(files[i]),"\\.")[[1]][1],suf,"targeted.recover",sep="_")
         all.files<-dir()
         do.exist<-all.files[which(all.files == this.name)]
-        
+
         if(length(do.exist)==0)
         {
             this.recovered<-target.onefile(filename=files[i], loc=i, aligned.ftrs=aligned.ftrs, pk.times=pk.times, align.mz.tol=align.mz.tol, align.chr.tol=align.chr.tol, mz.range=recover.mz.range, chr.range=recover.chr.range, use.observed.range=use.observed.range, orig.tol=align.mz.tol, min.bw=min.bw, max.bw=max.bw, bandwidth=.5, recover.min.count=recover.min.count)
@@ -335,7 +335,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
     ##############################################################################################
     message("loading feature tables after target search")
     features.recov<-new("list")
-    
+
     for(i in 1:length(files))
     {
         this.name<-paste(strsplit(tolower(files[i]),"\\.")[[1]][1],suf,"targeted.recover",sep="_")
@@ -345,21 +345,21 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         features.recov[[i]]<-this.recovered$this.f1
         gc()
     }
-    
+
     ##############################################################################################
-    
+
     if(min(unlist(lapply(features.recov, nrow))) >= 100)
     {
         message("****************************** time correction *************************")
         suf<-paste(suf,"round 2",sep="_")
         this.name<-paste("time_correct_done_",suf,".bin",sep="")
-        
+
         all.files<-dir()
         is.done<-all.files[which(all.files == this.name)]
-        
+
         if(length(is.done)==0)
         {
-            cl <- makeCluster(n.nodes)
+            cl <- makeCluster(n.nodes,type='SOCK')
             registerDoParallel(cl)
             #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
             clusterEvalQ(cl, library(apLCMS))
@@ -380,7 +380,7 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         is.done<-all.files[which(all.files == this.name)]
         if(length(is.done)==0)
         {
-            cl <- makeCluster(n.nodes)
+            cl <- makeCluster(n.nodes,type='SOCK')
             registerDoParallel(cl)
             #clusterEvalQ(cl, source("~/Desktop/Dropbox/1-work/apLCMS_code/new_proc_cdf.r"))
             clusterEvalQ(cl, library(apLCMS))
@@ -393,9 +393,9 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         }
         gc()
     }
-    
+
     #################################################################################################
-    
+
     rec<-new("list")
     colnames(aligned.ftrs)<-colnames(pk.times)<-c("mz","time","mz.min","mz.max",files)
     rec$features<-features.recov
@@ -406,6 +406,6 @@ function(folder, file.pattern=".cdf", known.table=NA, n.nodes=4, min.exp=2, min.
         rec$reduced.ftrs<-aligned.recov$aligned.ftrs
         rec$reduced.times<-aligned.recov$pk.times
     }
-    
+
     return(rec)
 }
