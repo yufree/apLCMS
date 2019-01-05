@@ -38,8 +38,7 @@ A matrix is returned. The columns are: m/z value, retention time, spread (standa
 \seealso{ proc.cdf }
 \examples{
 data(prof)
-this.feature<-prof.to.features(prof[[1]])
-this.feature[1:5,]
+this.feature <- prof.to.features(prof[[1]])
+this.feature[1:5, ]
 }
 \keyword{ models }
-

@@ -5,7 +5,9 @@
 \description{
   This is the aligned feature data from 4 sample LC/MS profiles.
 }
-\usage{data(aligned)}
+\usage{
+data(aligned)
+}
 \format{
   The format is:
 List of 4

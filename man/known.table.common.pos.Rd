@@ -7,7 +7,9 @@ A known feature table based on HMDB.
 \description{
 This table was compiled from HMDB metabolites. It contains only the H+, Na+, K+ and NH4+ derivative of known metabolites. It suites the need for analyzing LC/MS data generated with anion exchange chromatography. 
 }
-\usage{data(known.table.common.pos)}
+\usage{
+data(known.table.common.pos)
+}
 \format{
 A data frame containing the known metabolite ions and previously found features. It contains 18 columns: 
 	"chemical_formula": the chemical formula if knonw; 

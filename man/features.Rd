@@ -5,7 +5,9 @@
 \description{
   A list object containing 4 matrices, each of which is the feature table from a profile.
 }
-\usage{data(features)}
+\usage{
+data(features)
+}
 \format{
   List object containing multiple matrices. One matrix from each spectrum.
 }

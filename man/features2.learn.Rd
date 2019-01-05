@@ -5,7 +5,9 @@
 \description{
   A list object containing 4 matrices, each of which is from a profile. The elution times in the matrices are corrected.
 }
-\usage{data(features2)}
+\usage{
+data(features2)
+}
 \format{
 A list object. Each component of the list is a matrix.
 }

@@ -7,7 +7,9 @@ A known metabolite table based on HMDB.
 \description{
 This table was compiled from HMDB metabolites. It contains only the basic information of known metabolites. It can be used to produce feature tables with ion forms of the users' choice. 
 }
-\usage{data(known.table.hplus)}
+\usage{
+data(known.table.hplus)
+}
 \format{
 A data frame containing the known metabolites. It contains 4 columns: 
 	"chemical_formula": the chemical formula of the known table; 
@@ -22,6 +24,7 @@ Wishart, D. S., et al. (2009). HMDB: a knowledgebase for the human metabolome. N
 \examples{
 data(metabolite.table)
 data(adduct.table)
-known.table.example<-make.known.table(metabolite.table[1001:1020,], adduct.table[1:4,])
+known.table.example <- make.known.table(metabolite.table[1001:1020, ], adduct.table[1:4, 
+    ])
 }
 \keyword{datasets}
