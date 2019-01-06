@@ -1,9 +1,9 @@
 #' Convert a number of cdf files in the same directory to a feature table
-#' 
+#'
 #' This is a wrapper function, which calls four other functions to convert a
 #' number of cdf files to a feature table. All cdf files to be processed must
 #' be in a single folder.
-#' 
+#'
 #' The wrapper function calls five other functions to perform the feature table
 #' generation. Every spectrum (cdf file) first goes through proc.cdf() and
 #' prof.to.feature() to generate a spectrum-level peak table. The eluction time
@@ -13,7 +13,7 @@
 #' From version 4, the parameter mz.tol can no longer be NA. This is to allow
 #' the program better process data other than FTLCMS. It is recommended that
 #' the user use the machine's claimed accuracy. For FTMS, 1e-5 is recommended.
-#' 
+#'
 #' @param folder The folder where all CDF files to be processed are located.
 #' For example ÒC:/CDF/this_experimentÓ
 #' @param file.pattern The pattern in the names of the files to be processed.
@@ -116,9 +116,8 @@
 #' @seealso proc.cdf, prof.to.feature, adjust.time, feature.align,
 #' recover.weaker
 #' @keywords models
-#' @examples
-#' 
-#' 
+#' @export
+#'
 cdf.to.ftr <- function(folder, file.pattern=".cdf", n.nodes=4, min.exp=2, min.pres=0.5, min.run=12, mz.tol=1e-5, baseline.correct.noise.percentile=0.05, shape.model="bi-Gaussian",  BIC.factor=2, baseline.correct=0, peak.estim.method="moment", min.bw=NA, max.bw=NA, sd.cut=c(0.01,500), sigma.ratio.lim=c(0.01, 100), component.eliminate=0.01, moment.power=1, subs=NULL, align.mz.tol=NA, align.chr.tol=NA, max.align.mz.diff=0.01, pre.process=FALSE, recover.mz.range=NA, recover.chr.range=NA, use.observed.range=TRUE,recover.min.count=3, intensity.weighted=FALSE)
 {
     library(mzR)

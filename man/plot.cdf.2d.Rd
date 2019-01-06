@@ -27,11 +27,6 @@ plane, using a user-defined range. The entire data is too big to plot, thus
 the main purpose is to focus on small subregions of the data and check the
 peak detection results.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 }

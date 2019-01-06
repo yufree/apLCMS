@@ -44,11 +44,6 @@ into four parts, each of which is used to plot one EIC. When all four parts
 are occupied, the function calls x11() to open another graphic device.  The
 colors used (one per profile) is printed in the command window.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 }

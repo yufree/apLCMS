@@ -1,19 +1,16 @@
 #' Find peaks and valleys of a curve.
-#' 
+#'
 #' This is an internal function which is not supposed to be directly accessed
 #' by the user. Finds the peaks and valleys of a smooth curve.
-#' 
-#' 
+#'
+#'
 #' @param y The y values of a curve in x-y plane.
 #' @return A list object: \item{pks}{The peak positions.} \item{vlys}{The
 #' valley positions}
 #' @author Tianwei Yu <tyu8@@emory.edu>
 #' @references Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 #' @keywords models
-#' @examples
-#' 
-#' 
-#' 
+#' @export
 find.turn.point <-
 function(y)
 {
@@ -33,7 +30,7 @@ function(y)
         index.min <- index2 & !index1
         list(index.max = index.max, index.min = index.min)
     }
-    
+
     y <- y[!is.na(y)]
     if (length(unique(y)) == 1) {
         pks <- round(length(y)/2)
@@ -43,13 +40,13 @@ function(y)
         x$vlys <- vlys
         return(x)
     }
-    
+
     b<-msExtrema(y)
     pks<-which(b$index.max)
     vlys<-which(b$index.min)
     if(pks[1] != 1) vlys<-c(1, vlys)
     if(pks[length(pks)] != length(y)) vlys<-c(vlys, length(y))
-    
+
     if(length(pks) == 1) vlys<-c(1,length(y))
     x <- new("list")
     x$pks <- pks

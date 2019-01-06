@@ -57,16 +57,12 @@ density estimation is used to further split peak groups. Peaks belonging to
 one group are considered to correspond to the same feature.
 }
 \examples{
-
-
 data(features)
 features.2<-adjust.time(features)
 this.aligned<-feature.align(features,min.exp=2)
 summary(this.aligned)
 this.aligned$aligned.ftrs[1:5,]
 this.aligned$pk.times[1:5,]
-
-
 }
 \seealso{
 proc.to.feature

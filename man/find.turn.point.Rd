@@ -17,11 +17,6 @@ valley positions}
 This is an internal function which is not supposed to be directly accessed
 by the user. Finds the peaks and valleys of a smooth curve.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 }

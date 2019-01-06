@@ -40,12 +40,8 @@ of the empirical distribution is >1.5 times the density of the exponential
 distribution.
 }
 \examples{
-
-
 data(prof)
 find.tol(prof[[1]][,1])
-
-
 }
 \author{
 Tianwei Yu <tyu8@emory.edu>

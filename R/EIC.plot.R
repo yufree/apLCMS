@@ -27,10 +27,7 @@
 #' @author Tianwei Yu <tyu8@@emory.edu>
 #' @references Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 #' @keywords models
-#' @examples
-#'
-#'
-#'
+#' @export
 EIC.plot <-
 function(aligned, rows=NA, colors=NA, transform="none", subset=NA, min.run, min.pres, max.spline.time.points=1000)  # no object named "raw.prof" should exist. Otherwise it will be overwritten
 {

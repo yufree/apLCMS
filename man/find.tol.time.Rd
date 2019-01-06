@@ -69,11 +69,6 @@ retention times is larger than the elution time tolerance level, the group
 is further split at the gap. Grouping information is returned, as well as
 the elution time tolerance level.
 }
-\examples{
-
-
-
-}
 \author{
 Tianwei Yu <tyu8@emory.edu>
 }

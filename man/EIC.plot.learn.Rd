@@ -48,11 +48,6 @@ plots the EICs selected by the user.
 The function plots a single EIC. It plots intensity against retention time.
 It uses different color for different profiles.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 }

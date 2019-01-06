@@ -16,11 +16,6 @@
 \description{
 This is a internal function. It shouldn't be called by the end user.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 }

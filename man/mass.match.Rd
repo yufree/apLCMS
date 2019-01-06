@@ -21,11 +21,6 @@ unmatched.
 Given two vectors of m/z values and the tolerance ppm level, find the
 potential matches between the two vectors.
 }
-\examples{
-
-
-
-}
 \author{
 Tianwei Yu <tyu8@emory.edu>
 }

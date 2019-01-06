@@ -36,11 +36,6 @@ uncertainty.
 For each column of an EIC data feature matrix, find its predictive power on
 the m/z match to known metabolites.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 30(20): 2941-2948.
 }

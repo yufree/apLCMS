@@ -32,11 +32,6 @@ two-dimensional data (intensity v.s. RT). We then apply different smoothers
 EIC. At each smoothing setting, we record summary statistics of smoothed
 data.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 30(20): 2941-2948.
 }

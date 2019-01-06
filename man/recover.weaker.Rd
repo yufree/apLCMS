@@ -1,5 +1,4 @@
 \name{recover.weaker}
-\alias{recover.weaker}
 %- Also NEED an '\alias' for EACH other topic documented here.
 \title{ Recover weak signals in some profiles that is not identified as a peak, but corresponds to identified peaks in other spectra. }
 \description{
@@ -33,10 +32,10 @@ recover.weaker(filename, loc, aligned.ftrs, pk.times, align.mz.tol,
   \item{intensity.weighted}{Whether to use intensity to weight mass density estimation.}
 }
 \details{
-  For every feature, if it is not present in a spectrum, open the spectrum, and look around the m/z and elution time location of the feature. The observed intensities with m/z and elution time most consistent with the feature are collected. The peak location and intensity is evaluated. 
-  For each spectrum, the partially processed file: .rawprof is loaded. This file is the product of the function proc.cdf(). The m/z values are already grouped and the median taken. The function searches around the feature m/z and retention time. 
+  For every feature, if it is not present in a spectrum, open the spectrum, and look around the m/z and elution time location of the feature. The observed intensities with m/z and elution time most consistent with the feature are collected. The peak location and intensity is evaluated.
+  For each spectrum, the partially processed file: .rawprof is loaded. This file is the product of the function proc.cdf(). The m/z values are already grouped and the median taken. The function searches around the feature m/z and retention time.
   When a series of signals is found at an m/z group, kernel smoother is fit along the time axis to determine whether there is one single peak or multiple peaks. The bandwidth of the kernel smoother is determined as follows: multiply the length of the signals by the bandwidth parameter. If the resulting value is between min.bw and max.bw, use that value; else if the value is below min.bw, use min.bw; else if the value is above max.bw, use max.bw. The default values of min.bw and max.bw are NA, in which case min.bw is set to be 1/30 of the retention time range, and max.bw is set to be 1/15 of the retention time range. A modified EM algorithm which allows missing completely at random at certain time points is used for the evaluation of the peak location and area. If a single peak is detected by the kernel smoother, the maximum likelihood normal curve is fitted. If multiple peaks are detected, the EM algorithm finds the normal mixture that best explain the data.
-  After finding the peaks around the target feature, find the closest one to the target feature and record its information in the $aligned.ftrs and $pk.times matrices. 
+  After finding the peaks around the target feature, find the closest one to the target feature and record its information in the $aligned.ftrs and $pk.times matrices.
 }
 \value{
   Returns a list object with the following objects in it:
@@ -45,9 +44,5 @@ recover.weaker(filename, loc, aligned.ftrs, pk.times, align.mz.tol,
   \item{mz.tol}{The m/z tolerance in the aligned object.}
   \item{chr.tol}{The elution time tolerance in the aligned object.}
 }
-\references{}
 \author{ Tianwei Yu <tyu8@sph.emory.edu> }
-\note{}
-\seealso{}
-\examples{}
-\keyword{}
+

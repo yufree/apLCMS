@@ -31,11 +31,6 @@ select putative peaks from EIC.
 \details{
 This is the run filter described in Yu et al Bioinformatics 2009.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 }

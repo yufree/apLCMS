@@ -27,11 +27,6 @@ the user.
 This is an internal function. It interpolates missing y using linear
 interpolation, and then calculates the area under the curve.
 }
-\examples{
-
-
-
-}
 \author{
 Tianwei Yu <tyu8@emory.edu>
 }

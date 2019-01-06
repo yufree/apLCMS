@@ -21,11 +21,6 @@ position taking value 1, and all other positions taking value 0.
 Given a small matrix of distances, find the best column-row pairing that
 minimize the sum of distances of the matched pairs.
 }
-\examples{
-
-
-
-}
 \author{
 Tianwei Yu <tyu8@emory.edu>
 }

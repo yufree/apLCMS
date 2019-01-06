@@ -29,11 +29,6 @@ current dataset.
 The function calculates and updates the mean intensity, variation of
 intensity, mean retention time etc.
 }
-\examples{
-
-
-
-}
 \author{
 Tianwei Yu <tyu8@emory.edu>
 }

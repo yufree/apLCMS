@@ -47,11 +47,6 @@ procedure
 It uses repeated smoothing and splitting to separate EICs. The details are
 described in the reference and flowchart.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 }

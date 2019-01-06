@@ -33,11 +33,6 @@ needs to be the retention time, the second column the m/z values, and the
 third column the intensity values. The first row needs to be the column
 labels, rather than values.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 }

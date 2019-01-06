@@ -51,6 +51,7 @@ semi supervised feature detection.
 \examples{
 
 
+
 data(metabolite.table)
 data(adduct.table)
 known.table.example<-make.known.table(metabolite.table[1001:1020,], adduct.table[1:4,])

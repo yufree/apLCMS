@@ -21,11 +21,6 @@ This is an internal function. It loads LC/MS data into memory.
 The function uses functionality provided by the mzR package from
 Bioconductor.
 }
-\examples{
-
-
-
-}
 \references{
 Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
 }
