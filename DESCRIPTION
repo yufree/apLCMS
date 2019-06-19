@@ -1,7 +1,7 @@
 Package: apLCMS
 Title: Adaptive processing of LC-MS data
-Version: 6.6.1
-Date: 2018-07-04
+Version: 6.6.2
+Date: 2019-06-19
 Author: Tianwei Yu <tianwei.Yu@emory.edu>
 Maintainer: Tianwei Yu <tianwei.Yu@emory.edu>
 Description: Adaptive processing of LC/MS metabolomics data.
