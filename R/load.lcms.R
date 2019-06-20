@@ -62,7 +62,7 @@ function(filename)
         labels<-c(labels, this.labels)
     }
     times<-b[!is.na(b)]
-    close(mz.conn)
+    # close(mz.conn)    see: https://github.com/yufree/apLCMS/issues/1
 
     return(list(masses=masses, labels=labels, intensi=intensi, times=times))
 }
