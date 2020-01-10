@@ -2,11 +2,10 @@
 \alias{present.cdf.3d}
 \title{ Generates 3 dimensional plots for LCMS data. }
 \description{
-  This function takes the matrix output from proc.cdf() and generates a 3D plot of the data. It relies on the rgl library.
+  This function takes the matrix output from proc.cdf() and generates a 3D plot of the data. It relies on the rgl library. 
 }
 \usage{
-present.cdf.3d(prof, fill.holes = TRUE, transform = "none", time.lim = NA, mz.lim = NA,
-    box = TRUE, axes = TRUE)
+present.cdf.3d(prof, fill.holes = TRUE, transform = "none", time.lim = NA, mz.lim = NA, box = TRUE, axes = TRUE)
 }
 \arguments{
   \item{prof}{ The matrix output from the proc.cdf() function. }
@@ -18,14 +17,17 @@ present.cdf.3d(prof, fill.holes = TRUE, transform = "none", time.lim = NA, mz.li
   \item{axes}{ If the axes should be drawn.}
 }
 \details{
-  The function calls the rgl library. Spectrum values within the time.lim and mz.lim range is plotted in 3D.
+  The function calls the rgl library. Spectrum values within the time.lim and mz.lim range is plotted in 3D. 
 }
 \value{
 There is no return value from this function.
 }
 \references{ http://rgl.neoscientists.org/about.shtml }
 \author{ Tianwei Yu <tyu8@emory.edu> }
+\note{}
+\seealso{}
 \examples{
 data(prof)
-present.cdf.3d(prof[[2]], time.lim = c(250, 400), mz.lim = c(400, 500))
+present.cdf.3d(prof[[2]],time.lim=c(250,400), mz.lim=c(400,500))
 }
+\keyword{}

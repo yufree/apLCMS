@@ -1,17 +1,3 @@
-#' Internal function: finding the best match between a set of detected features
-#' and a set of known features.
-#'
-#' Given a small matrix of distances, find the best column-row pairing that
-#' minimize the sum of distances of the matched pairs.
-#'
-#'
-#' @param a A matrix of distances.
-#' @param unacceptable A distance larger than which cannot be accepted as
-#' pairs.
-#' @return A matrix the same dimension as the input matrix, with matched
-#' position taking value 1, and all other positions taking value 0.
-#' @author Tianwei Yu <tyu8@@emory.edu>
-#' @keywords models
 find.match <-
 function(a, unacceptable=4)
 {
@@ -24,7 +10,7 @@ function(a, unacceptable=4)
         pos<-c(pos.x, pos.y)
         return(pos)
     }
-
+    
     b<-a*0
     if(ncol(a) == 1)
     {

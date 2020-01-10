@@ -1,78 +1,3 @@
-#' Recover weak signals in some profiles that is not identified as a peak, but
-#' corresponds to identified peaks in other spectra.
-#'
-#' Given the aligned feature table, some features are identified in a subgroup
-#' of spectra. This doesn't mean they don't exist in the other spectra. The
-#' signal could be too low to pass the run filter. Thus after obtaining the
-#' aligned feature table, this function re-analyzes each spectrum to try and
-#' fill in the holes in the aligned feature table.
-#'
-#' For every feature, if it is not present in a spectrum, open the spectrum,
-#' and look around the m/z and elution time location of the feature. The
-#' observed intensities with m/z and elution time most consistent with the
-#' feature are collected. The peak location and intensity is evaluated.  For
-#' each spectrum, the partially processed file: .rawprof is loaded. This file
-#' is the product of the function proc.cdf(). The m/z values are already
-#' grouped and the median taken. The function searches around the feature m/z
-#' and retention time.  When a series of signals is found at an m/z group,
-#' kernel smoother is fit along the time axis to determine whether there is one
-#' single peak or multiple peaks. The bandwidth of the kernel smoother is
-#' determined as follows: multiply the length of the signals by the bandwidth
-#' parameter. If the resulting value is between min.bw and max.bw, use that
-#' value; else if the value is below min.bw, use min.bw; else if the value is
-#' above max.bw, use max.bw. The default values of min.bw and max.bw are NA, in
-#' which case min.bw is set to be 1/30 of the retention time range, and max.bw
-#' is set to be 1/15 of the retention time range. A modified EM algorithm which
-#' allows missing completely at random at certain time points is used for the
-#' evaluation of the peak location and area. If a single peak is detected by
-#' the kernel smoother, the maximum likelihood normal curve is fitted. If
-#' multiple peaks are detected, the EM algorithm finds the normal mixture that
-#' best explain the data.  After finding the peaks around the target feature,
-#' find the closest one to the target feature and record its information in the
-#' $aligned.ftrs and $pk.times matrices.
-#'
-#' @param filename the cdf file name from which weaker signal is to be
-#' recovered.
-#' @param loc the location of the filename in the vector of filenames.
-#' @param aligned.ftrs matrix, with columns of m/z values, elution times,
-#' signal strengths in each spectrum.
-#' @param pk.times matrix, with columns of m/z, median elution time, and
-#' elution times in each spectrum.
-#' @param align.mz.tol the m/z tolerance used in the alignment.
-#' @param align.chr.tol the elution time tolerance in the alignment.
-#' @param this.f1 The matrix which is the output from proc.to.feature().
-#' @param this.f2 The matrix which is the output from proc.to.feature(). The
-#' retention time in this object have been adjusted by the function
-#' adjust.time().
-#' @param orig.tol The mz.tol parameter provided to the proc.cdf() function.
-#' This helps retrieve the intermediate file.
-#' @param mz.range The m/z around the feature m/z to search for observations.
-#' The default value is NA, in which case 1.5 times the m/z tolerance in the
-#' aligned object will be used.
-#' @param chr.range The retention time around the feature retention time to
-#' search for observations. The default value is NA, in which case 0.5 times
-#' the retention time tolerance in the aligned object will be used.
-#' @param use.observed.range If the value is TRUE, the actual range of the
-#' observed locations of the feature in all the spectra will be used.
-#' @param min.bw The minimum bandwidth to use in the kernel smoother.See the
-#' details section.
-#' @param max.bw The maximum bandwidth to use in the kernel smoother.See the
-#' details section.
-#' @param bandwidth A value between zero and one. Multiplying this value to the
-#' length of the signal along the time axis helps determine the bandwidth in
-#' the kernel smoother used for peak identification. See the details section.
-#' @param recover.min.count minimum number of raw data points to support a
-#' recovery.
-#' @param intensity.weighted Whether to use intensity to weight mass density
-#' estimation.
-#' @return Returns a list object with the following objects in it:
-#' \item{aligned.ftrs}{A matrix, with columns of m/z values, elution times, and
-#' signal strengths in each spectrum.} \item{pk.times}{A matrix, with columns
-#' of m/z, median elution time, and elution times in each spectrum.}
-#' \item{mz.tol}{The m/z tolerance in the aligned object.} \item{chr.tol}{The
-#' elution time tolerance in the aligned object.}
-#' @author Tianwei Yu <tyu8@@sph.emory.edu>
-#' @export
 recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, align.chr.tol, this.f1, this.f2, mz.range=NA, chr.range=NA, use.observed.range=TRUE, orig.tol=1e-5,min.bw=NA,max.bw=NA,bandwidth=.5, recover.min.count=3, intensity.weighted=FALSE)
 {
     duplicate.row.remove<-function(new.table)
@@ -81,7 +6,7 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
         n<-1
         m<-2
         to.remove<-rep(0, nrow(new.table))
-
+        
         while(m <= nrow(new.table))
         {
             if(abs(new.table[m,1]-new.table[n,1])<1e-10 & abs(new.table[m,2]-new.table[n,2])<1e-10 & abs(new.table[m,5]-new.table[n,5])<1e-10)
@@ -94,59 +19,67 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
             }
             #cat("*(", n, m, ")")
         }
-
+        
         if(sum(to.remove)>0) new.table<-new.table[-which(to.remove==1),]
         new.table
     }
-
+    
     library(splines)
     library(mzR)
     if(is.na(mz.range)) mz.range<-1.5*align.mz.tol
     if(is.na(chr.range)) chr.range<-align.chr.tol/2
-
+    
     this.raw<-load.lcms(filename)
+        na.sel<-c(which(is.na(this.raw$masses)), which(is.na(this.raw$labels)), which(is.na(this.raw$intensi)))
+        if(length(na.sel)>0)
+        {
+            na.sel<-unique(na.sel)
+            this.raw$masses<-this.raw$masses[-na.sel]
+            this.raw$labels<-this.raw$labels[-na.sel]
+            this.raw$intensi<-this.raw$intensi[-na.sel]
+        }
     masses<-this.raw$masses
     intensi<-this.raw$intensi
     labels<-this.raw$labels
     times<-this.raw$times
     rm(this.raw)
-
-
+    
+    
     masses<-c(masses, -100000)
     mass.breaks<-which(masses[1:(length(masses)-1)] > masses[2:length(masses)])
     mass.breaks<-c(0,mass.breaks)
     masses<-masses[1:(length(masses)-1)]
-
+    
     curr.order<-order(masses)
     intensi<-intensi[curr.order]
     labels<-labels[curr.order]
     masses<-masses[curr.order]
-
-
+    
+    
     if(is.na(min.bw)) min.bw<-diff(range(times, na.rm=TRUE))/60
     if(is.na(max.bw)) max.bw<-diff(range(times, na.rm=TRUE))/15
     if(min.bw >= max.bw) min.bw<-max.bw/4
-
+    
     times<-times[order(times)]
     base.curve<-unique(times)
     base.curve<-base.curve[order(base.curve)]
     aver.diff<-mean(diff(base.curve))
     base.curve<-cbind(base.curve, base.curve*0)
-
+    
     all.times<-base.curve[,1]
     if(all.times[1]>0) all.times<-c(0,all.times)
     all.times<-c(all.times, 2*all.times[length(all.times)]-all.times[length(all.times)-1])
     all.times<-(all.times[1:(length(all.times)-1)]+all.times[2:length(all.times)])/2
     all.times<-all.times[2:length(all.times)]-all.times[1:(length(all.times)-1)]
-
+    
     this.ftrs<-aligned.ftrs[, (loc+4)]
     this.times<-pk.times[,(loc+4)]
     custom.mz.tol<-mz.range*aligned.ftrs[,1]
     observed.mz.range<-(aligned.ftrs[,4]-aligned.ftrs[,3])/2
     #	if(use.observed.range) custom.mz.tol[which(custom.mz.tol < observed.mz.range)]<-observed.mz.range[which(custom.mz.tol < observed.mz.range)]
-
+    
     custom.chr.tol<-rep(chr.range, nrow(aligned.ftrs))
-
+    
     if(use.observed.range)
     {
         observed.chr.range<-(apply(pk.times[,5:ncol(pk.times)],1,max)-apply(pk.times[,5:ncol(pk.times)],1,min))/2
@@ -162,12 +95,12 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
     orig.time<-orig.time[to.use]
     adjusted.time<-adjusted.time[to.use]
     sp<-interpSpline(orig.time~adjusted.time, na.action = na.omit)
-
+    
     sel.non.na<-which(!is.na(aligned.ftrs[,2]))
     target.time<-aligned.ftrs[,2]
     target.time[sel.non.na]<-predict(sp,aligned.ftrs[sel.non.na,2])$y
-
-
+    
+    
     l<-length(masses)
     curr.bw<-0.5*orig.tol*max(masses)
     all.mass.den<-density(masses, weights=intensi/sum(intensi), bw=curr.bw, n=2^min(15, floor(log2(l))-2))
@@ -175,7 +108,7 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
     all.mass.vlys<-all.mass.den$x[all.mass.turns$vlys]
     breaks<-c(0, unique(round(approx(masses,1:l,xout=all.mass.vlys,rule=2,ties='ordered')$y))[-1])
     this.mz<-rep(NA, length(this.ftrs))
-
+    
     for(i in 1:length(this.ftrs))
     {
         if(this.ftrs[i] == 0 & aligned.ftrs[i,1] < masses[breaks[length(breaks)]])
@@ -187,14 +120,14 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                 this.found<-c(which(abs(masses[breaks]-aligned.ftrs[i,1]) < custom.mz.tol[i]), min(which(masses[breaks] > aligned.ftrs[i,1])), max(which(masses[breaks] < aligned.ftrs[i,1])))+1
                 this.found<-c(min(this.found), max(this.found))
             }
-
+            
             if(length(this.found)>1)
             {
                 this.sel<-(breaks[this.found[1]]+1):breaks[this.found[2]]
                 this.masses<-masses[this.sel]
                 this.labels<-labels[this.sel]
                 this.intensi<-intensi[this.sel]
-
+                
                 this.bw=0.5*orig.tol*aligned.ftrs[i,1]
                 if(intensity.weighted)
                 {
@@ -207,7 +140,7 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                 mass.pks<-mass.den$x[mass.turns$pks]
                 mass.vlys<-c(-Inf, mass.den$x[mass.turns$vlys], Inf)
                 mass.pks<-mass.pks[which(abs(mass.pks-aligned.ftrs[i,1]) < custom.mz.tol[i]/1.5)]
-
+                
                 if(length(mass.pks) > 0)
                 {
                     this.rec<-matrix(c(Inf, Inf, Inf),nrow=1)
@@ -215,7 +148,7 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                     {
                         mass.lower<-max(mass.vlys[mass.vlys < mass.pks[k]])
                         mass.upper<-min(mass.vlys[mass.vlys > mass.pks[k]])
-
+                        
                         that.sel<-which(this.masses > mass.lower & this.masses <= mass.upper)
                         if(length(that.sel) > recover.min.count)
                         {
@@ -226,14 +159,14 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                             that.labels<-that.labels[that.order]
                             that.masses<-that.masses[that.order]
                             that.intensi<-that.intensi[that.order]
-
+                            
                             that.prof<-merge.seq.3(that.labels, that.masses, that.intensi)
-
+                            
                             that.mass<-sum(that.prof[,1]*that.prof[,3])/sum(that.prof[,3])
                             curr.rec<-c(that.mass, NA,NA)
                             if(nrow(that.prof) < 10)
                             {
-
+                                
                                 if(!is.na(target.time[i]))
                                 {
                                     thee.sel<-which(abs(that.prof[,2]-target.time[i]) < custom.chr.tol[i]*2)
@@ -258,7 +191,7 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                                 this.span<-range(this[,1])
                                 this.curve<-base.curve[base.curve[,1]>=this.span[1] & base.curve[,1] <=this.span[2],]
                                 this.curve[this.curve[,1] %in% this[,1],2]<-this[,2]
-
+                                
                                 bw<-min(max(bandwidth*(max(this[,1])-min(this[,1])),min.bw), max.bw)
                                 this.smooth<-ksmooth(this.curve[,1],this.curve[,2], kernel="normal",bandwidth=bw)
                                 smooth.y<-this.smooth$y
@@ -266,14 +199,14 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                                 pks<-this.smooth$x[turns$pks]
                                 vlys<-this.smooth$x[turns$vlys]
                                 vlys<-c(-Inf, vlys, Inf)
-
+                                
                                 pks.n<-pks
                                 for(m in 1:length(pks))
                                 {
                                     this.vlys<-c(max(vlys[which(vlys<pks[m])]), min(vlys[which(vlys>pks[m])]))
                                     pks.n[m]<-sum(this[,1]>= this.vlys[1] & this[,1] <= this.vlys[2])
                                 }
-
+                                
                                 if(!is.na(target.time[i]))
                                 {
                                     pks.d<-abs(pks-target.time[i])    # distance from the target peak location
@@ -282,18 +215,18 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                                 }else{
                                     pks<-pks[pks.n>recover.min.count]
                                 }
-
+                                
                                 all.pks<-pks
                                 all.vlys<-vlys
                                 all.this<-this
-
+                                
                                 if(length(all.pks)>0)
                                 {
                                     for(pks.i in 1:length(all.pks))
                                     {
                                         pks<-all.pks[pks.i]
                                         vlys<-c(max(all.vlys[which(all.vlys<pks)]), min(all.vlys[which(all.vlys>pks)]))
-
+                                        
                                         this<-all.this[which(all.this[,1] >= vlys[1] & all.this[,1] <= vlys[2]),]
                                         if(is.null(nrow(this)))
                                         {
@@ -302,7 +235,7 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                                         }else{
                                             x<-this[,1]
                                             y<-this[,2]
-
+                                            
                                             if(nrow(this)>=10)
                                             {
                                                 miu<-sum(x*y)/sum(y)
@@ -329,7 +262,7 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                             }
                         }
                     }
-
+                    
                     if(!is.na(target.time[i]))
                     {
                         this.sel<-which(abs(this.rec[,2]-target.time[i])<custom.chr.tol[i])
@@ -337,8 +270,8 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
                         this.sel<-1:nrow(this.rec)
                         this.sel<-this.sel[this.sel != 1]
                     }
-
-
+                    
+                    
                     if(length(this.sel)>0)
                     {
                         if(length(this.sel)>1)
@@ -371,6 +304,6 @@ recover.weaker<-function(filename, loc, aligned.ftrs, pk.times, align.mz.tol, al
     to.return$this.times<-this.times
     to.return$this.f1<-duplicate.row.remove(this.f1)
     to.return$this.f2<-duplicate.row.remove(this.f2)
-
+    
     return(to.return)
 }

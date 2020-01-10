@@ -3,9 +3,7 @@
 \docType{data}
 \title{Sample data after weak signal recovery}
 \description{This is a list object with four items, each from a sample LC/MS profile.}
-\usage{
-data(recovered)
-}
+\usage{data(recovered)}
 \format{
   The format is:
 List of 4, each item is in turn a list of 4.

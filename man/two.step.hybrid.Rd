@@ -4,20 +4,10 @@
 Two step hybrid feature detection.
 }
 \description{
-A two-stage hybrid feature detection and alignment procedure, for data generated in multiple batches.
+A two-stage hybrid feature detection and alignment procedure, for data generated in multiple batches. 
 }
 \usage{
-two.step.hybrid(folder, info, min.within.batch.prop.detect = 0.1,
-    min.within.batch.prop.report = 0.5, min.batch.prop = 0.5,
-    batch.align.mz.tol = 1e-05, batch.align.chr.tol = 50, file.pattern = ".cdf",
-    known.table = NA, n.nodes = 4, min.pres = 0.5, min.run = 12,
-    mz.tol = 1e-05, baseline.correct.noise.percentile = 0.25,
-    shape.model = "bi-Gaussian", baseline.correct = 0, peak.estim.method = "moment",
-    min.bw = NA, max.bw = NA, sd.cut = c(1, 60), sigma.ratio.lim = c(0.33,
-        3), component.eliminate = 0.01, moment.power = 2, align.mz.tol = NA,
-    align.chr.tol = NA, max.align.mz.diff = 0.01, pre.process = FALSE,
-    recover.mz.range = NA, recover.chr.range = NA, use.observed.range = TRUE,
-    match.tol.ppm = NA, new.feature.min.count = 2, recover.min.count = 3)
+two.step.hybrid(folder, info, min.within.batch.prop.detect=0.1, min.within.batch.prop.report=0.5, min.batch.prop=0.5, batch.align.mz.tol=1e-5, batch.align.chr.tol=50, file.pattern=".cdf", known.table=NA, n.nodes=4, min.pres=0.5, min.run=12, mz.tol=1e-5, baseline.correct.noise.percentile=0.25, shape.model="bi-Gaussian",  baseline.correct=0, peak.estim.method="moment", min.bw=NA, max.bw=NA, sd.cut=c(1,60), sigma.ratio.lim=c(0.33, 3), component.eliminate=0.01, moment.power=2, align.mz.tol=NA, align.chr.tol=NA, max.align.mz.diff=0.01, pre.process=FALSE, recover.mz.range=NA, recover.chr.range=NA, use.observed.range=TRUE, match.tol.ppm=NA, new.feature.min.count=2, recover.min.count=3)
 }
 \arguments{
   \item{folder}{ The folder where all CDF files to be processed are located. For example “C:/CDF/this_experiment” }
@@ -28,13 +18,13 @@ two.step.hybrid(folder, info, min.within.batch.prop.detect = 0.1,
   \item{batch.align.mz.tol}{The m/z tolerance in ppm for between-batch alignment.}
   \item{batch.align.chr.tol}{The RT tolerance for between-batch alignment.}
   \item{file.pattern}{The pattern in the names of the files to be processed. The default is ".cdf". Other formats supported by mzR package can also be used, e.g. "mzML" etc.}
-  \item{known.table}{ A data frame containing the known metabolite ions and previously found features. It contains 18 columns:
-	"chemical_formula": the chemical formula if knonw;
-	"HMDB_ID": HMDB ID if known;
-	"KEGG_compound_ID": KEGG compound ID if known;
-	"neutral.mass": the neutral mass if known:
-	"ion.type": the ion form, such as H+, Na+, ..., if known;
-	"m.z": m/z value, either theoretical for known metabolites, or mean observed value for unknown but previously found features;
+  \item{known.table}{ A data frame containing the known metabolite ions and previously found features. It contains 18 columns: 
+	"chemical_formula": the chemical formula if knonw; 
+	"HMDB_ID": HMDB ID if known; 
+	"KEGG_compound_ID": KEGG compound ID if known; 
+	"neutral.mass": the neutral mass if known: 
+	"ion.type": the ion form, such as H+, Na+, ..., if known; 
+	"m.z": m/z value, either theoretical for known metabolites, or mean observed value for unknown but previously found features; 
 	"Number_profiles_processed": the total number of LC/MS profiles that were used to build this database;
 	"Percent_found": in what percentage was this feature found historically amount all data processed in building this database;
 	"mz_min": the minimum m/z value observed for this feature;
@@ -43,7 +33,7 @@ two.step.hybrid(folder, info, min.within.batch.prop.detect = 0.1,
 	"RT_sd": the standard deviation of retention time observed for this feature;
 	"RT_min": the minimum retention time observed for this feature;
 	"RT_max": the maximum retention time observed for this feature;
-	"int_mean.log.": the mean log intensity observed for this feature;
+	"int_mean.log.": the mean log intensity observed for this feature; 
 	"int_sd.log.": the standard deviation of log intensity observed for this feature;
 	"int_min.log.": the minimum log intensity observed for this feature;
 	"int_max.log.": the maximum log intensity observed for this feature;
@@ -74,13 +64,18 @@ two.step.hybrid(folder, info, min.within.batch.prop.detect = 0.1,
   \item{recover.min.count}{ The minimum time point count for a series of point in the EIC for it to be considered a true feature. }
 }
 \details{
-The function first conducts hybrid feature detection and alignment in each batch separately. Then a between-batch RT correction and feature alignment is conducted. Weak signal recovery is conducted at the single feature table level.
+The function first conducts hybrid feature detection and alignment in each batch separately. Then a between-batch RT correction and feature alignment is conducted. Weak signal recovery is conducted at the single feature table level. 
 }
 \value{
 A list is returned.
   \item{batchwise.results}{A list. Each item in the list is the product of semi.sup() from a single batch.}
   \item{final.ftrs}{Feature table. This is the end product of the function.}
 }
+\references{
+}
 \author{ Tianwei Yu < tianwei.yu@emory.edu> }
+\note{}
 \seealso{ semi.sup, cdf.to.ftrs, proc.cdf, prof.to.feature, adjust.time, feature.align, recover.weaker }
+\examples{
+}
 \keyword{ models }

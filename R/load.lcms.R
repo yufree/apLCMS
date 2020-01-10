@@ -1,18 +1,3 @@
-#' Loading LC/MS data.
-#'
-#' This is an internal function. It loads LC/MS data into memory.
-#'
-#' The function uses functionality provided by the mzR package from
-#' Bioconductor.
-#'
-#' @param filename The CDF file name.
-#' @return A list is returned.  \item{masses}{ The vector of m/z values. }
-#' \item{labels}{ The vector of retention times. } \item{intensi}{ The vector
-#' of intensity values. } \item{times}{ The vector of unique time points. }
-#' @author Tianwei Yu <tyu8@@emory.edu>
-#' @references Bioinformatics. 25(15):1930-36.  BMC Bioinformatics. 11:559.
-#' @keywords models
-#' @export
 load.lcms <-
 function(filename)
 {
@@ -24,23 +9,23 @@ function(filename)
     }else{
         mz.conn<-openMSfile(filename)
     }
-
+    
     masses<-NULL
     intensi<-NULL
     labels<-NULL
     b<-header(mz.conn)$retentionTime
-
+    
     segs<-seq(0, length(b), by=200)
     if((length(b) %% 200) != 0) segs<-c(segs, length(b))
-
+    
     for(n in 2:length(segs))
     {
         a<-peaks(mz.conn, scans=(segs[n-1]+1):segs[n])
-
+        
         this.masses<-NULL
         this.intensi<-NULL
         this.labels<-NULL
-
+        
         for(i in 1:length(a))
         {
             this.a<-a[[i]]
@@ -48,7 +33,7 @@ function(filename)
             {
                 this.a<-this.a[this.a[,2]>1e-10,]
                 if(is.null(nrow(this.a))) this.a<-matrix(this.a, nrow=1)
-
+                
                 this.masses<-c(this.masses, this.a[,1])
                 this.intensi<-c(this.intensi, this.a[,2])
                 this.labels<-c(this.labels, rep(b[segs[n-1]+i],nrow(this.a)))
@@ -56,13 +41,13 @@ function(filename)
                 b[segs[n-1]+i]<-NA
             }
         }
-
+        
         masses<-c(masses, this.masses)
         intensi<-c(intensi, this.intensi)
         labels<-c(labels, this.labels)
     }
     times<-b[!is.na(b)]
-    # close(mz.conn)    see: https://github.com/yufree/apLCMS/issues/1
-
+    close(mz.conn)
+    
     return(list(masses=masses, labels=labels, intensi=intensi, times=times))
 }

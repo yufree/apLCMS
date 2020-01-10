@@ -5,9 +5,7 @@
 \description{
   This is the aligned feature data from 4 sample profiles after weaker signal recovery.
 }
-\usage{
-data(new.aligned)
-}
+\usage{data(new.aligned)}
 \format{
   The format is:
 List of 4
